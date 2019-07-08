@@ -1,0 +1,205 @@
+---
+title: "Statistical Analysis of Biological Data"
+author: "Mark Dunning"
+date: "8 July 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Part I
+
+## How to test for normality
+
+
+```{r}
+library(tidyverse)
+df1 <- read_csv("data/normal_example.csv")
+```
+
+```{r}
+ggplot(df, aes(x=x)) + geom_histogram()
+```
+
+```{r}
+ggplot(df, aes(x = x)) + geom_density()
+```
+
+```{r}
+ggplot(df1,aes(sample=x)) + geom_qq() + geom_qq_line(col="red")
+```
+
+
+Now lets read some more realistic data
+
+```{r}
+df2 <- read_csv("data/toy_example.csv")
+```
+
+## Using the histogram
+
+```{r}
+ggplot(df2, aes(x = x)) + geom_histogram()
+```
+
+```{r}
+ggplot(df2, aes(x = y)) + geom_histogram()
+```
+
+
+
+## Using a boxplot
+
+```{r}
+  ggplot(df2,aes(x="",y=x)) + geom_boxplot()
+```
+
+```{r}
+ggplot(df2,aes(x="",y=x)) + geom_boxplot()
+```
+
+
+## The qqplot
+
+```{r}
+ggplot(df1,aes(sample=x)) + geom_qq() + geom_qq_line(col="red")
+```
+
+
+## Tests for normality
+
+
+```{r}
+#shapiro test
+shapiro.test(df1$x)
+shapiro.test(df2$x)
+shapiro.test(df2$y)
+```
+
+```{r}
+#kolomogorov-Smirnov test
+ks.test(y,"pnorm", mean=mean(df1$x), sd=sd(df1$x))
+```
+
+## Summary Statistics
+
+```{r}
+summarise(df2, mean(x), median(x), IQR(x))
+```
+
+
+```{r}
+library(psych)
+
+describe(df2)
+
+```
+
+
+## Tidy data
+
+```{r}
+df2
+```
+
+```{r}
+df %>% gather
+```
+
+```{r}
+df %>% gather %>% 
+  group_by(key) %>% 
+  summarise(mean(value))
+```
+
+```{r}
+df %>% gather %>% 
+  ggplot(aes(x = key, y=value,fill=key)) + geom_boxplot()
+```
+
+# Part II 
+
+
+```{r}
+library(vcd)
+Arthritis
+```
+
+
+```{r}
+group_by(Arthritis, Sex) %>% 
+  summarise(N = n()) %>% 
+  mutate(prop = prop.table(N))
+```
+
+```{r}
+group_by(Arthritis, Sex, Improved) %>% 
+  summarise(N = n()) %>% 
+  mutate(prop = prop.table(N))
+```
+
+```{r}
+group_by(Arthritis, Improved, Sex) %>% 
+  summarise(N = n()) %>% 
+  mutate(prop = prop.table(N))
+```
+
+```{r}
+group_by(Arthritis, Improved, Treatment) %>% 
+  summarise(N = n()) %>% 
+  spread(Improved, N) %>%
+  select(-Treatment) %>% 
+  chisq.test()
+```
+
+
+
+```{r}
+install.packages("vcd")
+library(vcd)
+attach(Arthritis)
+
+#view the data
+head(Arthritis)
+
+##one way table (count of one variable)
+t1 <- table(Arthritis$Sex)
+t1
+
+#to get proportion of males and females
+prop.table(t1)
+prop.table(t1)*100  #to make it a percentage
+
+
+##two way table (cross tab)
+t2 <- table (Arthritis$Sex, Arthritis$Improved) #swap variables to switch row and column position
+t2
+
+#proportion & percentage
+prop.table(t2)          #proportion from the total
+prop.table(t2)*100      #percentage from the total
+
+prop.table(t2,1)        #proportion from the first variable
+prop.table(t2,1)*100    #percentage from the first variable
+
+prop.table(t2,2)        #proportion from the second variable
+prop.table(t2,2)*100    #percentage from the second variable
+
+
+#sum
+addmargins(t2)          #both sums shown 
+addmargins(t2,1)        #sum of first variable
+addmargins(t2,2)        #sum of second variable
+
+
+##three-way contingency table
+t3 <- table (Arthritis$Sex, Arthritis$Improved, Arthritis$Treatment)
+t3
+
+#we can also put them all in a multi-dimensional table
+t4 <- ftable(Arthritis$Sex, Arthritis$Improved, Arthritis$Treatment)
+t4
+```
+
