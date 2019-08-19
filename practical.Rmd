@@ -29,13 +29,13 @@ We can inspect the data in RStudio and discover that it consists of a single col
 View(df1)
 ```
 
-Various graphical methods are available to assess the distrbution. The first of which is a *histogram*. Here, the data are split into bins (`ggplot2` choses the number of bins) and the value on the `y` axis corresponds to the number of observations in that bin. The user only has to specify the variable to be plotted, and `ggplot2` takes care of the binning.
+Various graphical methods are available to assess the distrbution. The first of which is a *histogram*. Here, the data are split into "bins" (`ggplot2` choses the number of bins) and the value on the `y` axis corresponds to the number of observations in that bin. The user only has to specify the variable to be plotted, and `ggplot2` takes care of the binning. From this plot we can judge what the average value of the data is and the spread.
 
 ```{r}
 ggplot(df1, aes(x=x)) + geom_histogram()
 ```
 
-A similar option is to produce a density curve. Here the y-axis is the *density* points with a particular value.
+A similar option is to produce a density curve. Here the y-axis is the *density* of a particular value.
 
 ```{r}
 ggplot(df1, aes(x = x)) + geom_density()
@@ -44,117 +44,151 @@ ggplot(df1, aes(x = x)) + geom_density()
 The third option is a the boxplot which shows the median, and quartiles of the distribution.
 
 ```{r}
-ggplot(df1, aes(x="",y=x)) + geom_violin(alpha=0.4) + geom_boxplot(alpha=0.4)
+ggplot(df1, aes(x="",y=x)) + geom_boxplot()
+```
+
+A *violin plot* is sometimes used in conjunction with the boxplot to show density information.
+
+```{r}
+ggplot(df1, aes(x="",y=x))  + geom_violin() + geom_boxplot()
 ```
 
 
+Finally, we have a "*qq-plot*" which allows to compare the quantiles of our dataset against a theoretical normal distribution. If the majority of points lie on a diagonal line then the data are approximately normal.
 
 ```{r}
 ggplot(df1,aes(sample=x)) + geom_qq() + geom_qq_line(col="red")
 ```
 
+These graphical methods are by far the easiest way to assess if a given dataset is normally-distributed. For "real-life" data, the results are unlikely to give a perfect plot, so some degree of judgement and prior experience with the data type are required. 
 
-Now lets read some more realistic data
+
+In fact, these data were simulated from a normal distribution. Now lets read some more realistic data
 
 ```{r}
 df2 <- read_csv("data/toy_example.csv")
+df2
 ```
+******
+******
+******
 
-## Using the histogram
+#### Exercise
 
-```{r}
-ggplot(df2, aes(x = x)) + geom_histogram()
-```
+- Are the datasets `x` and `y`, contained in the data frame `df2` normally-distributed or not? Use the plots introduced above to justify your answer.
 
-```{r}
-ggplot(df2, aes(x = y)) + geom_histogram()
-```
-
-
-
-## Using a boxplot
-
-```{r}
-  ggplot(df2,aes(x="",y=x)) + geom_boxplot()
-```
-
-```{r}
-ggplot(df2,aes(x="",y=x)) + geom_boxplot()
-```
-
-
-## The qqplot
-
-```{r}
-ggplot(df1,aes(sample=x)) + geom_qq() + geom_qq_line(col="red")
-```
+******
+******
+******
 
 
 ## Tests for normality
 
+There are a couple of methods for testing whether variables are normally-distributed or not.
 
 ```{r}
+
 #shapiro test
+#p<0.05 ...difference between data and normality..data not normal
+#p>0.05 ...no diff between data and normality ..data normally distributed
+
 shapiro.test(df1$x)
-shapiro.test(df2$x)
-shapiro.test(df2$y)
+
 ```
 
 ```{r}
 #kolomogorov-Smirnov test
 ks.test(df1$x,"pnorm", mean=mean(df1$x), sd=sd(df1$x))
+
+#what test to choose
+#kolomogorov-Smirnov test...sample >=1000
+#Shapiro....smaller samples but more strict(<5000)
 ```
+
+
+
+
 
 ## Summary Statistics
 
+In the [accompanying R course](http://sbc.shef.ac.uk/r-crash-course/) we have seen how to produce summary statistics of columns in a dataset. For a dataset that is normally-distributed, appropriate measures of the average and variability are the mean and standard deviation. Both these functions are available within R and can be used in conjunction with the `summarise` function in `tidyverse`.
+
 ```{r}
-summarise(df2, mean(x), median(x), IQR(x))
+summarise(df1, Mean = mean(x), 
+          Var= var(x),
+          SD = sd(x),
+          SE = sd(x) / sqrt(n()))
 ```
 
+The `psych` package provides a convenient function `describe` for generating these statistics, and more
 
 ```{r}
 library(psych)
-
 describe(df2)
 
 ```
 
 
-## Tidy data
+******
+******
+******
 
-```{r}
-df2
+#### Exercise
+
+1- Read the excel file called ‘EX Biostat P1’ into R 
+2- Identify if the age and hospitalization days are normally distributed
+3- Use the appropriate descriptive statistics [mean±SD or median (IQ range)] for each variable 
+
+
+******
+******
+******
+
+# Part 2 - Contingency tables
+
+To demonstrate the analysis of contingency tables we will use a dataset provided with the `vcd` package. You will need to install this package using the R command
+
+```{r eval=FALSE}
+install.packages("vcd")
 ```
 
-```{r}
-df2 %>% gather
-```
+
+The data frame `Arthritis` should then be accessible which is described as:- 
+
+> Data from Koch & Edwards (1988) from a double-blind clinical trial investigating a new treatment for rheumatoid arthritis.
 
 ```{r}
-df2 %>% gather %>% 
-  group_by(key) %>% 
-  summarise(mean(value))
-```
-
-```{r}
-df2 %>% gather %>% 
-  ggplot(aes(x = key, y=value,fill=key)) + geom_boxplot()
-```
-
-# Part 2
-
-
-```{r}
+#let's use the'Arthritis' dataset in the 'vcd' package 
 library(vcd)
 Arthritis
 ```
 
+<div class="alert alert-warning">
+
+**Question: What do you think the null hypothesis for this dataset might be? How would you test it and what would your summary statistics be?**
+
+</div>
+
+We can use the `summarise` function to obtain counts of a single variable with the special `n()` function. Grouping using the `group_by` function determines which variables are counted.
+
+
 
 ```{r}
+##one way table (count of one variable)
+group_by(Arthritis, Sex) %>% 
+  summarise(N = n())
+```
+
+Further manipulation of this table will give proportions (which will ultimately be used in the statistical testing)
+
+```{r}
+#to get proportion of males and females
 group_by(Arthritis, Sex) %>% 
   summarise(N = n()) %>% 
   mutate(prop = prop.table(N))
 ```
+
+With `group_by` we can use two variables to summarise by. The order in which they are specified will dictate how the proportions are calculated.
 
 ```{r}
 group_by(Arthritis, Sex, Improved) %>% 
@@ -168,6 +202,16 @@ group_by(Arthritis, Improved, Sex) %>%
   mutate(prop = prop.table(N))
 ```
 
+The function `chisq.test` can be used to assess whether differences in proportions are significant or not. Unfortunately it requires data to be presented in a different format; that of a contingency table with rows and columns for each variable being investigated. For such a transformation we can use the `spread` function from `tidyverse` which will transform a *long* table into a *wide* one.
+
+```{r}
+group_by(Arthritis, Improved, Treatment) %>% 
+  summarise(N = n()) %>% 
+  spread(Improved, N)
+```
+
+The `chisq.test` function will provide a p-value that we can use to assess significance.
+
 ```{r}
 group_by(Arthritis, Improved, Treatment) %>% 
   summarise(N = n()) %>% 
@@ -176,13 +220,7 @@ group_by(Arthritis, Improved, Treatment) %>%
   chisq.test()
 ```
 
-```{r}
-group_by(Arthritis, Improved, Sex) %>% 
-  summarise(N = n()) %>% 
-  spread(Improved, N) %>%
-  select(-Sex) %>% 
-  chisq.test()
-```
+Should the assumptions of the chi-squared test not be valid, the Fishers' exact test can be used instead.
 
 ```{r}
 group_by(Arthritis, Improved, Sex) %>% 
@@ -193,14 +231,48 @@ group_by(Arthritis, Improved, Sex) %>%
 ```
 
 ```{r}
-group_by(Arthritis, Sex, Improved, Treatment) %>% 
-  summarise(N = n())
-```
-```{r}
-group_by(Arthritis, Improved, Sex) %>% 
+ct <- group_by(Arthritis, Improved, Sex,Treatment) %>% 
   summarise(N = n()) %>% 
-  ggplot(aes(x = Sex, y=Improved,fill=N)) + geom_tile()
+  xtabs(N ~ Improved + Sex + Treatment,data=.)
+
+mantelhaen.test(ct)
 ```
+
+
+******
+******
+******
+
+#### Exercise
+
+******
+******
+******
+
+1- Read the excel file called ‘EX Biostat P2’ into R 
+Name the file in R as ‘biostat2’
+
+2- Make a cross table named GenderGrade showing the gender in the rows and tumor grade in the columns
+
+3- Define the percentage of females with Grade III tumor in the total sample 
+
+4- Define the percentage of Grade III tumors within females only
+
+5- Add a column in the GenderGrade table showing the sum of the 3 grades in males and in females and state the total number of males and females in the sample 
+
+6- Use the appropriate test to check if the tumor grade depends on the gender 
+
+7- Investigate the association between gender and tumor grade
+
+8- Add a new variable ‘Effective drug’ to the GenderGrade table and call the new table GenderGradeDrug
+
+9- Create a multi-dimensional table containing the 3 variables together in the same table
+
+10- Use the appropriate test to check if the type of effective drug is dependent on gender and tumor grade
+
+******
+******
+******
 
 # Part 3
 
@@ -262,6 +334,7 @@ rates2 %>% group_by(variable) %>%
 rates2 %>% 
   ggplot(aes(x = variable,y=value)) + geom_boxplot()
 ```
+
 ```{r}
 t.test(value~variable,data=rates2,paired=TRUE)
 ```
@@ -309,7 +382,7 @@ rates_e
 kruskal.test(value ~ season, data=rates_e)
 ```
 
-```{r}
+```{r eval=FALSE}
 ###CHECK#
 rates %>% gather(variable, value, -season) %>%
   kruskal.test(value ~ variable, data=.)
@@ -353,6 +426,7 @@ plot(TukeyHSD(anova))
 ```{r}
 medulloblastoma <- readxl::read_xlsx("data/Medulloblastoma.xlsx")
 ```
+
 ```{r}
 twoway <- aov(`C-myc` ~ Site + Size,data=medulloblastoma)
 summary(twoway)
