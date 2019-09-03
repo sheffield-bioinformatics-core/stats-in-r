@@ -245,6 +245,8 @@ group_by(Arthritis, Improved, Sex) %>%
   fisher.test()
 ```
 
+Three-way contingency tables are also possible. i.e. to see if there is an improvement in treatment depending on Sex and Treatment type. However, the `xtabs` function has to be used to construct a 3D table that can be analysed by the `mantelhaen.test` function.
+
 ```{r}
 ct <- group_by(Arthritis, Improved, Sex,Treatment) %>% 
   summarise(N = n()) %>% 
@@ -264,32 +266,29 @@ mantelhaen.test(ct)
 ******
 ******
 
-1- Read the excel file called ‘EX Biostat P2’ into R 
-Name the file in R as ‘biostat2’
+- Read the excel file called `EX Biostat P2.xls` into R 
 
-2- Make a cross table named GenderGrade showing the gender in the rows and tumor grade in the columns
+- Make a cross table named `GenderGrade` showing the gender in the rows and tumor grade in the columns
 
-3- Define the percentage of females with Grade III tumor in the total sample 
+- Define the percentage of females with Grade III tumor in the total sample 
 
-4- Define the percentage of Grade III tumors within females only
+- Define the percentage of Grade III tumors within females only
 
-5- Add a column in the GenderGrade table showing the sum of the 3 grades in males and in females and state the total number of males and females in the sample 
+- Add a column in the `GenderGrade` table showing the sum of the 3 grades in males and in females and state the total number of males and females in the sample 
 
-6- Use the appropriate test to check if the tumor grade depends on the gender 
+- Use the appropriate test to check if the tumor grade depends on the gender 
 
-7- Investigate the association between gender and tumor grade
+- Create a multi-dimensional table containing all 3 variables together in the same table
 
-8- Add a new variable ‘Effective drug’ to the GenderGrade table and call the new table GenderGradeDrug
-
-9- Create a multi-dimensional table containing the 3 variables together in the same table
-
-10- Use the appropriate test to check if the type of effective drug is dependent on gender and tumor grade
+- Use the appropriate test to check if the type of effective drug is dependent on gender and tumor grade
 
 ******
 ******
 ******
 
-# Part 3
+# Part 3 - Comparing 2 or more continuous variables
+
+In this part we will show how to perform tests to compare 2 (or more) continuous variables. We will simulate some example data to be used for the examples.
 
 ```{r}
 set.seed(20190717)
@@ -305,27 +304,52 @@ rates <- data.frame(season,E,F,G)
 head(rates)
 ```
 
+The data are presented in a table with one column for each season and a measurement of either E, F or G. Data in this form are sometimes referred to as *wide* data and are not especially convenient for analysis with `dplyr` and `ggplot2`. 
+
+In the first stage of our analysis we would like to visualise and compare the distribution of our variables, but this is not straightforward with one line of `tidyverse` code.
+
+It turns out that we can convert the data into *long* format for analysis. The contents of the data frame are the same, just transformed into a different shape. Arguably, these data are less convenient for humans to visualise, but allows the data to be manipulated using the tools we are familiar with.
+
+The `tidyr` package provides a function called `gather` that will convert from wide to long data.
+
+```{r}
+tidyr::gather(rates, key=variable, value=value,-season)
+```
+
+The consequence is that the new data frame can be plotted using `ggplot` in a familiar way. With the "piping" features of `tidyverse` we actually don't have to make permanent changes to the underlying data. A boxplot of the data can be created as follows:-
+
 ```{r}
 rates %>% gather(variable, value, -season) %>%
   ggplot(aes(x = variable, y = value)) + geom_boxplot() + geom_jitter(width=0.1)
 ```
 
-# Compare between TWO GROUPS 
-# A] Parametric (T test)
 
-# 1-independant t test.......TWO independant groups 
+## The Independant t test.......TWO independant groups 
 
-#select 2 groups to compare
+Lets consider that we want to compare the rates of a particular variable (say E) between summer and winter. Here we have two groups and these can be treated as *independant* variables.
+
 
 ```{r}
 rates1 <- rates %>% gather(variable, value, -season) %>%
-  filter(season %in% c("summer","winter"),variable=="E")
+  filter(season %in% c("summer","winter"),variable=="E") 
 rates1
 ```
 
+For such a test we need to test if the variances in the two groups are roughly the same. The easiest means of doing this is graphically.
+
 ```{r}
-t.test(value ~ season, data=rates1)
+ggplot(rates1, aes(x = season,y=value)) + geom_boxplot()
 ```
+
+We can now use the `t.test` function to perform an *independant* test. The first argument is the R formula notation for the test being performed. This function allows various type of test to be performed by changing the appropriate arguments (see the help for `t.test` for details (`?t.test`)).
+
+```{r}
+t.test(value ~ season, data=rates1 ,var.equal = FALSE)
+```
+
+The `t.test` function in R and specification of the formula means that different hypotheses can be tested on the same data.
+
+Now lets create another data frame which contains data for variables E and F and summer and winter months.
 
 ```{r}
 rates2 <- rates %>% gather(variable, value, -season) %>%
@@ -334,21 +358,23 @@ rates2
 ```
 
 
+First we test if the variances of the two groups are roughly the same
+```{r}
+rates2 %>% group_by(variable) %>% 
+  summarise(Variance=var(value))
+
+rates2 %>% 
+  ggplot(aes(x = variable,y=value)) + geom_boxplot()
+
+```
+
+They do not seem to be, so we should employ a test that does not assume equal variances. As it happens, this is the default option for `t.test`.
+
 ```{r}
 t.test(value~variable,data=rates2)
 ```
 
-## How to test if variances are equal?
-
-```{r}
-rates2 %>% group_by(variable) %>% 
-  summarise(Variance=var(value))
-```
-
-```{r}
-rates2 %>% 
-  ggplot(aes(x = variable,y=value)) + geom_boxplot()
-```
+## The Paired t test.......TWO dependant groups 
 
 ```{r}
 t.test(value~variable,data=rates2,paired=TRUE)
