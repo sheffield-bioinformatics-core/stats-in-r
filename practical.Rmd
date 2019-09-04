@@ -1,8 +1,13 @@
 ---
 title: "Statistical Analysis of Biological Data"
 author: "Mark Dunning"
-date: "8 July 2019"
-output: html_notebook
+date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
+output: 
+  html_notebook: 
+    toc: yes
+    toc_float: yes
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
@@ -376,9 +381,14 @@ t.test(value~variable,data=rates2)
 
 ## The Paired t test.......TWO dependant groups 
 
+In the previous test we assumed no relationship between the values being tested. However, we know from the experimental design that observations are made at the same point in time for variables E and F. If we want to test for differences between these variables, we can take the pairing into account. As you will see from the output, the hypothesis testing is performed on the *differences* of the two groups.
+
 ```{r}
 t.test(value~variable,data=rates2,paired=TRUE)
 ```
+
+
+
 
 ```{r}
 rates3 <- rates %>% gather(variable, value, -season) %>%
@@ -387,10 +397,9 @@ rates3 <- rates %>% gather(variable, value, -season) %>%
 pairwise.t.test(rates3$value,rates3$season)  
 ```
 
-# Compare between TWO GROUPS 
-# B] Non- Parametric (Wilcoxon test)
+## Non- Parametric alternatives (Wilcoxon test)
 
-#1-Independant samples = Wilcoxon rank sum test (Mann Whitney U test)
+### Independant samples = Wilcoxon rank sum test (Mann Whitney U test)
 
 
 ```{r}
@@ -401,16 +410,15 @@ wilcox.test(value~season, data=rates1)
 wilcox.test(value~variable,data=rates2)
 ```
 
-#2-Paired samples = Wilcoxon signed rank test
+### Paired samples = Wilcoxon signed rank test
 
 ```{r}
 wilcox.test(value~variable,data=rates2,paired=TRUE)
 ```
 
-# Compare between MORE THAN TWO GROUPS 
-# A] Non-Parametric (Kruskal Wallis)
+## Compare between MORE THAN TWO GROUPS 
 
-#1-Independant samples = kruskal Wallis
+### Independant samples = kruskal Wallis
 
 ```{r}
 rates_e <- rates %>% gather(variable, value, -season) %>%
@@ -429,8 +437,8 @@ rates %>% gather(variable, value, -season) %>%
   kruskal.test(value ~ variable, data=.)
 ```
 
-# Compare between MORE THAN TWO GROUPS 
-# B] Parametric (ANOVA)
+## Compare between MORE THAN TWO GROUPS 
+#### Parametric (ANOVA)
 
 
 ```{r}
