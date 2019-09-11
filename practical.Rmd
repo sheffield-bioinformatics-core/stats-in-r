@@ -89,7 +89,7 @@ df2
 
 ## Tests for normality
 
-There are a couple of methods for testing whether variables are normally-distributed or not.
+There are a couple of methods for testing whether variables are normally-distributed or not. If the p-value is sufficiently small then we conclude that the data are not normally disttributed.
 
 ```{r}
 
@@ -250,16 +250,6 @@ group_by(Arthritis, Improved, Sex) %>%
   fisher.test()
 ```
 
-Three-way contingency tables are also possible. i.e. to see if there is an improvement in treatment depending on Sex and Treatment type. However, the `xtabs` function has to be used to construct a 3D table that can be analysed by the `mantelhaen.test` function.
-
-```{r}
-ct <- group_by(Arthritis, Improved, Sex,Treatment) %>% 
-  summarise(N = n()) %>% 
-  xtabs(N ~ Improved + Sex + Treatment,data=.)
-
-mantelhaen.test(ct)
-```
-
 
 ******
 ******
@@ -283,28 +273,24 @@ mantelhaen.test(ct)
 
 - Use the appropriate test to check if the tumor grade depends on the gender 
 
-- Create a multi-dimensional table containing all 3 variables together in the same table
-
-- Use the appropriate test to check if the type of effective drug is dependent on gender and tumor grade
-
 ******
 ******
 ******
 
 # Part 3 - Comparing 2 or more continuous variables
 
-In this part we will show how to perform tests to compare 2 (or more) continuous variables. We will simulate some example data to be used for the examples.
+In this part we will show how to perform tests to compare 2 (or more) continuous variables. We will simulate some example data to be used for the examples. Patients belonging to three different groups (A, B or C) have been measured for their risk of developing different cancer types.
 
 ```{r}
 set.seed(20190717)
 
 #make some data
-season <- sample(c("spring","summer","autumn","winter"),50,TRUE)
-E <- rnorm(50,5,6)
-F <- rnorm(50,7.8,4.5)
-G <- rnorm(50,65,16.7)
+group <- sample(c("A","B","C"),50,TRUE)
+lung <- rnorm(50,5,6)
+ovarian <- rnorm(50,7.8,4.5)
+breast <- rnorm(50,65,16.7)
 
-rates <- data.frame(season,E,F,G) 
+rates <- data.frame(group,lung,ovarian,breast) 
 # in excel the grouping variable must be 'character' not numbers
 head(rates)
 ```
@@ -317,66 +303,46 @@ It turns out that we can convert the data into *long* format for analysis. The c
 
 The `tidyr` package provides a function called `gather` that will convert from wide to long data.
 
-```{r}
-tidyr::gather(rates, key=variable, value=value,-season)
+```{r eval=FALSE}
+tidyr::gather(rates, key=variable, value=value,-group)
 ```
 
 The consequence is that the new data frame can be plotted using `ggplot` in a familiar way. With the "piping" features of `tidyverse` we actually don't have to make permanent changes to the underlying data. A boxplot of the data can be created as follows:-
 
 ```{r}
-rates %>% gather(variable, value, -season) %>%
+rates %>% gather(variable, value, -group) %>%
   ggplot(aes(x = variable, y = value)) + geom_boxplot() + geom_jitter(width=0.1)
 ```
 
 
 ## The Independant t test.......TWO independant groups 
 
-Lets consider that we want to compare the rates of a particular variable (say E) between summer and winter. Here we have two groups and these can be treated as *independant* variables.
+Lets consider that we want to compare the rates of a particular variable (say breast) between patient groups A and B. Here we have two groups and these can be treated as *independant* variables.
 
 
 ```{r}
-rates1 <- rates %>% gather(variable, value, -season) %>%
-  filter(season %in% c("summer","winter"),variable=="E") 
+rates1 <- rates %>% gather(variable, value, -group) %>%
+  filter(group %in% c("A","B"),variable=="breast") 
 rates1
 ```
 
 For such a test we need to test if the variances in the two groups are roughly the same. The easiest means of doing this is graphically.
 
 ```{r}
-ggplot(rates1, aes(x = season,y=value)) + geom_boxplot()
+ggplot(rates1, aes(x = group,y=value)) + geom_boxplot()
 ```
+
+```{r}
+rates1 %>% group_by(group) %>% 
+  summarise(Variance=var(value))
+
+```
+
 
 We can now use the `t.test` function to perform an *independant* test. The first argument is the R formula notation for the test being performed. This function allows various type of test to be performed by changing the appropriate arguments (see the help for `t.test` for details (`?t.test`)).
 
 ```{r}
-t.test(value ~ season, data=rates1 ,var.equal = FALSE)
-```
-
-The `t.test` function in R and specification of the formula means that different hypotheses can be tested on the same data.
-
-Now lets create another data frame which contains data for variables E and F and summer and winter months.
-
-```{r}
-rates2 <- rates %>% gather(variable, value, -season) %>%
-  filter(variable %in% c("E","F"), season %in% c("summer","winter"))
-rates2
-```
-
-
-First we test if the variances of the two groups are roughly the same
-```{r}
-rates2 %>% group_by(variable) %>% 
-  summarise(Variance=var(value))
-
-rates2 %>% 
-  ggplot(aes(x = variable,y=value)) + geom_boxplot()
-
-```
-
-They do not seem to be, so we should employ a test that does not assume equal variances. As it happens, this is the default option for `t.test`.
-
-```{r}
-t.test(value~variable,data=rates2)
+t.test(value ~ group, data=rates1 ,var.equal = FALSE)
 ```
 
 ## The Paired t test.......TWO dependant groups 
@@ -384,18 +350,30 @@ t.test(value~variable,data=rates2)
 In the previous test we assumed no relationship between the values being tested. However, we know from the experimental design that observations are made at the same point in time for variables E and F. If we want to test for differences between these variables, we can take the pairing into account. As you will see from the output, the hypothesis testing is performed on the *differences* of the two groups.
 
 ```{r}
-t.test(value~variable,data=rates2,paired=TRUE)
+rates2 <- rates %>% gather(variable, value, -group) %>%
+  filter(group =="A",variable %in% c("lung","breast")) 
+```
+
+```{r}
+ggplot(rates2, aes(x = variable,y=value)) + geom_boxplot()
+```
+
+```{r}
+t.test(value~variable,data=rates2, paired = TRUE)
 ```
 
 
 
 
 ```{r}
-rates3 <- rates %>% gather(variable, value, -season) %>%
-  filter(variable=="F")
+rates3 <- rates %>% gather(variable, value, -group) %>%
+  filter(group=="A")
 
-pairwise.t.test(rates3$value,rates3$season)  
+pairwise.t.test(rates3$value,rates3$variable)  
 ```
+
+
+
 
 ## Non- Parametric alternatives (Wilcoxon test)
 
@@ -403,7 +381,7 @@ pairwise.t.test(rates3$value,rates3$season)
 
 
 ```{r}
-wilcox.test(value~season, data=rates1)
+wilcox.test(value~group, data=rates1)
 ```
 
 ```{r}
@@ -418,14 +396,6 @@ wilcox.test(value~variable,data=rates2,paired=TRUE)
 
 ## Compare between MORE THAN TWO GROUPS 
 
-### Independant samples = kruskal Wallis
-
-```{r}
-rates_e <- rates %>% gather(variable, value, -season) %>%
-  filter(variable=="E")
-rates_e
-
-```
 
 ```{r}
 kruskal.test(value ~ season, data=rates_e)
@@ -440,23 +410,25 @@ rates %>% gather(variable, value, -season) %>%
 ## Compare between MORE THAN TWO GROUPS 
 #### Parametric (ANOVA)
 
+```{r}
+rates3 <- gather(rates,variable, value, -group) %>%
+  filter(group=="A")
+```
+
 
 ```{r}
-anova <- aov(value ~ season, data=rates_e)
+anova <- aov(value ~ variable, data=rates3)
 anova
 summary(anova)
 ```
 
 ```{r}
-set.seed(5)
-E <- rnorm(50,5,6)
-F <- rnorm(50,7.8,4.5)
-G <- c(50:99)
-
+TukeyHSD(anova)
 ```
 
+
 ```{r}
-anova <- data.frame(E,F,G) %>% gather %>% 
+anova <- rates3 %>% gather %>% 
   aov(value ~ key, data=.)
 anova
 summary(anova)
@@ -469,6 +441,14 @@ TukeyHSD(anova)
 ```{r}
 plot(TukeyHSD(anova))
 ```
+
+### Independant samples = kruskal Wallis
+
+```{r}
+
+
+```
+
 
 ## Two-way ANOVA
 
