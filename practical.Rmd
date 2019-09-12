@@ -16,7 +16,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Acknowledgement
 
-Some of these materials are based on a previous course at [Cancer Research Uk Cambridge Institute](http://bioinformatics-core-shared-training.github.io/IntroductionToStats/).
+Some of these materials are based on previous courses at Cancer Research Uk Cambridge Institute.
+
+- [Introduction to Statistical Analysis](http://bioinformatics-core-shared-training.github.io/IntroductionToStats/)
+- [Further Statistical Analysis in R](https://rawgit.com/bioinformatics-core-shared-training/intermediate-stats/master/manual.pdf)
 
 # Part I
 
@@ -286,7 +289,7 @@ group_by(Arthritis, Improved, Sex) %>%
 
 # Part 3 - Comparing 2 or more continuous variables
 
-In this part we will show how to perform tests to compare 2 (or more) continuous variables. We will simulate some example data to be used for the examples. Patients belonging to three different groups (A, B or C) have been measured for their risk of developing different cancer types.
+In this part we will show how to perform tests to compare 2 (or more) continuous variables. We will simulate some example data to be used for the testing. Lets' imagine that patients belonging to three different groups (A, B or C) have been measured for their risk of developing different cancer types.
 
 ```{r}
 set.seed(20190717)
@@ -323,11 +326,11 @@ rates %>% gather(variable, value, -group) %>%
 
 
 ## The Independant t test.......TWO independant groups 
-A two-sample t-test should be used if you want to compare the measurements of two populations. There aretwo types of two-sample t-test:independent(unpaired) and paired(dependent).An independent two-sample t-test is used when the two samples areindependent of each other, e.g. comparing the mean response of two groups of patients on treatment vs. control in a clinical trial. As the name suggests,a paired two-sample t-test is used when the two samples are paired, e.g. comparing the mean blood pressure of patients before and after treatment (two measurements per patient)
+A two-sample t-test should be used if you want to compare the measurements of two populations. There are two types of two-sample t-test:independent (unpaired) and paired (dependent). To make the correct choice, you need to understand your underlying data. An independent two-sample t-test is used when the two samples are independent of each other, e.g. *comparing the mean response of two groups of patients on treatment vs. control in a clinical trial*. As the name suggests,a paired two-sample t-test is used when the two samples are paired, e.g. *comparing the mean blood pressure of patients before and after treatment* (two measurements per patient).
 
-Lets consider that we want to compare the rates of a particular variable (say breast) between patient groups A and B. Here we have two groups and these can be treated as *independant* variables.
+Lets consider that we want to compare the rates of a particular cancer (say breast) between patient groups A and B. Here we have two groups and these can be treated as *independant* variables as different patients belong to the two groups.
 
-An example of an independant test in our example would be to *test the rates of breast cancer between groups A and B*. The *null hypothesis* for such a test would be that the rate of breast cancer is the same between groups A and B. As our inital data frame contains all groups and diseases, we need to filter to the appropriate rows.
+The *null hypothesis* for such a test would be that the rate of breast cancer is the same between groups A and B. We seek to evidence to reject this hypothesis by calculating a test statistic. Firstly, as our inital data frame contains all groups and diseases we need to filter to the appropriate rows.
 
 ```{r}
 rates1 <- rates %>% gather(variable, value, -group) %>%
@@ -351,7 +354,9 @@ rates1 %>% group_by(group) %>%
 ```
 
 
-We can now use the `t.test` function to perform an *independant* test. The first argument is the *R formula* notation for the test being performed. It allows us to define which columns in our dataset are the numeric and grouping variables in the test.
+We can now use the `t.test` function to perform an *independant* test. This will provide us with a *t* test statistic and a p-value. **However, it is up to us to interpret the p-value**.
+
+The first argument to `t.test` is the *R formula* notation for the test being performed. It allows us to define which columns in our dataset are the numeric and grouping variables in the test.
 
 This function allows various type of test to be performed by changing the appropriate arguments (see the help for `t.test` for details (`?t.test`)). For instance, we can tell the test that we believe our variances are not equal.
 
@@ -394,7 +399,7 @@ t.test(value~variable,data=rates2, paired = TRUE)
 ```
 
 
-
+At the moment we are only consider analyses where we have two groups (/samples) to compare. One technique to compare to multiple groups to is to apply multiple t-tests to the dataset. Later we will discover how `ANOVA` can be used on the same data.
 
 ```{r}
 rates3 <- rates %>% gather(variable, value, -group) %>%
@@ -404,16 +409,29 @@ pairwise.t.test(rates3$value,rates3$variable)
 ```
 
 
-
-
 ## Non- Parametric alternatives (Wilcoxon test)
+
+Being able to use the `t-test` relies on the your data being normally-distributed. If we do not sufficient confidence in this assumption, there are different statistical tests that can be applied. Rather than calculating and comparing the *means* and *variances* of different groups they are *rank-based* methods. However, they still come with a set of assumptions and involve the generation of test statistics and p-values.
 
 ### Independant samples = Wilcoxon rank sum test (Mann Whitney U test)
 
+This test has many different names including the Wilcoxon, Wilcoxon two sample test, Wilcoxon-Mann-Whitney, Wilcoxon rank sum and the Mann-Whitney-U test. However, this test should notbe confused with the Wilcoxon signed rank test. To avoid confusion this test is usually referred to as the Mann-Whitney Utest, which is used when the dependent variable to be examined is continuous but the assumptions for parametric tests are violated.
+
+The assumptions of the Mann-Whitney U are as follows:
+
+1.The dependent variable is ordinal or continuous.
+2.The data consist of a randomly selected sample of independent observations from two independent groups.
+3.The dependent variables for the two independent groups share a similar shape.
+
+Fortunately, the R programmers have made the function to do a wilcox test similar to doing a t-test. **The difficulty is in choosing the correct to apply - which R will not advise you on**.
+
+Let's go back to our example of comparing breast cancer rates between groups A and B. The equivalent non-parametric version of the test we performed before is:-
 
 ```{r}
 wilcox.test(value~group, data=rates1)
 ```
+
+Similarly, to compare breast and lung cancer rates in a non-parametric fashion we can do:-
 
 ```{r}
 wilcox.test(value~variable,data=rates2)
@@ -421,25 +439,20 @@ wilcox.test(value~variable,data=rates2)
 
 ### Paired samples = Wilcoxon signed rank test
 
+The `wilcox.test` is flexible in much the same way that `t.test` in. We can switch to applying a paired test by adding the argument `paired=TRUE`.
+
 ```{r}
 wilcox.test(value~variable,data=rates2,paired=TRUE)
 ```
 
-## Compare between MORE THAN TWO GROUPS 
-
-
-```{r}
-kruskal.test(value ~ season, data=rates_e)
-```
-
-```{r eval=FALSE}
-###CHECK#
-rates %>% gather(variable, value, -season) %>%
-  kruskal.test(value ~ variable, data=.)
-```
 
 ## Compare between MORE THAN TWO GROUPS 
 #### Parametric (ANOVA)
+
+The two-sample t-test is useful when we have just two groups of continuous data to compare. When we want to compare more than two groups, a one-way ANOVA can be used to simultaneously compare all groups, rather than carrying out several individual two-sample t-tests.  The main advantage of doing this is that it reduces the number of tests being carried out, meaning that the type I error rate (the probability of seeing a significant result just by chance) does not become inflated. 
+
+A one-way ANOVA compares group means by partitioning the variation in the data into *between group variance* and *within group variance*.
+
 
 ```{r}
 rates3 <- gather(rates,variable, value, -group) %>%
@@ -453,31 +466,28 @@ anova
 summary(anova)
 ```
 
+When the F-test provides a significant result it tells us that there is at least on difference in the groups. However, it does not tell us which group is different. For this, we can apply a "post-hoc test" such as the Tukey test.
+
+
 ```{r}
 TukeyHSD(anova)
 ```
 
 
-```{r}
-anova <- rates3 %>% gather %>% 
-  aov(value ~ key, data=.)
-anova
-summary(anova)
-```
 
-```{r}
-TukeyHSD(anova)
-```
-
-```{r}
-plot(TukeyHSD(anova))
-```
 
 ### Independant samples = kruskal Wallis
 
 ```{r}
 
 
+```
+
+
+
+
+```{r}
+kruskal.test(value ~ as.factor(variable), data=rates3)
 ```
 
 
