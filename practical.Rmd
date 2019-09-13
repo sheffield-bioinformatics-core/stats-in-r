@@ -143,20 +143,15 @@ describe(df2)
 ```
 
 
-******
-******
-******
-
-#### Exercise
-
-1- Read the excel file called ‘EX Biostat P1’ into R 
-2- Identify if the age and hospitalization days are normally distributed
-3- Use the appropriate descriptive statistics [mean±SD or median (IQ range)] for each variable 
 
 
-******
-******
-******
+<div class="alert alert-warning">
+- Read the excel file called ‘EX Biostat P1’ into R 
+- Identify if the age and hospitalization days are normally distributed
+- Use the appropriate descriptive statistics [mean±SD or median (IQ range)] for each variable 
+
+</div>
+
 
 # Part 2 - Contingency tables
 
@@ -263,15 +258,7 @@ group_by(Arthritis, Improved, Sex) %>%
 ```
 
 
-******
-******
-******
-
-#### Exercise
-
-******
-******
-******
+<div class="alert alert-warning">
 
 - Read the excel file called `EX Biostat P2.xls` into R 
 
@@ -283,129 +270,91 @@ group_by(Arthritis, Improved, Sex) %>%
 
 - Use the appropriate test to check if the tumor grade depends on the gender 
 
-******
-******
-******
+</div>
 
 # Part 3 - Comparing 2 or more continuous variables
 
-In this part we will show how to perform tests to compare 2 (or more) continuous variables. We will simulate some example data to be used for the testing. Lets' imagine that patients belonging to three different groups (A, B or C) have been measured for their risk of developing different cancer types.
+In this part we will show how to perform tests to compare 2 (or more) continuous variables. The dataset describes individuals that have been following different diets and their age and gender.
 
 ```{r}
-set.seed(20190717)
-
-#make some data
-group <- sample(c("A","B","C"),50,TRUE)
-lung <- rnorm(50,5,6)
-ovarian <- rnorm(50,7.8,4.5)
-breast <- rnorm(50,65,16.7)
-
-rates <- data.frame(group,lung,ovarian,breast) 
-# in excel the grouping variable must be 'character' not numbers
-head(rates)
+diet <- read_csv("data/diet.csv")
+diet
 ```
 
-The data are presented in a table with one column for each season and a measurement of either E, F or G. Data in this form are sometimes referred to as *wide* data and are not especially convenient for analysis with `dplyr` and `ggplot2`. 
-
-In the first stage of our analysis we would like to visualise and compare the distribution of our variables, but this is not straightforward with one line of `tidyverse` code.
-
-It turns out that we can convert the data into *long* format for analysis. The contents of the data frame are the same, just transformed into a different shape. Arguably, these data are less convenient for humans to visualise, but allows the data to be manipulated using the tools we are familiar with.
-
-The `tidyr` package provides a function called `gather` that will convert from wide to long data.
-
-```{r eval=FALSE}
-tidyr::gather(rates, key=variable, value=value,-group)
-```
-
-The consequence is that the new data frame can be plotted using `ggplot` in a familiar way. With the "piping" features of `tidyverse` we actually don't have to make permanent changes to the underlying data. A boxplot of the data can be created as follows:-
+For analysis purposes, it will be useful to add an extra column to indicate how much weight each person has lost.
 
 ```{r}
-rates %>% gather(variable, value, -group) %>%
-  ggplot(aes(x = variable, y = value)) + geom_boxplot() + geom_jitter(width=0.1)
+diet <- mutate(diet, weight.loss = initial.weight - final.weight)
+diet
 ```
+
+<div class="alert alert-warning">
+
+**Discussion: Discuss with your neighbours what hypotheses you could test with these data?**
+
+N.B. in practice we would form our hypotheses before collecting the data!
+</div>
+
+
 
 
 ## The Independant t test.......TWO independant groups 
+
 A two-sample t-test should be used if you want to compare the measurements of two populations. There are two types of two-sample t-test:independent (unpaired) and paired (dependent). To make the correct choice, you need to understand your underlying data. An independent two-sample t-test is used when the two samples are independent of each other, e.g. *comparing the mean response of two groups of patients on treatment vs. control in a clinical trial*. As the name suggests,a paired two-sample t-test is used when the two samples are paired, e.g. *comparing the mean blood pressure of patients before and after treatment* (two measurements per patient).
 
-Lets consider that we want to compare the rates of a particular cancer (say breast) between patient groups A and B. Here we have two groups and these can be treated as *independant* variables as different patients belong to the two groups.
+Lets consider that we want to compare whether males or females lost more weight during the trial. Here we have two groups and these can be treated as *independant* variables as different patients belong to the two groups.
 
-The *null hypothesis* for such a test would be that the rate of breast cancer is the same between groups A and B. We seek to evidence to reject this hypothesis by calculating a test statistic. Firstly, as our inital data frame contains all groups and diseases we need to filter to the appropriate rows.
-
-```{r}
-rates1 <- rates %>% gather(variable, value, -group) %>%
-  filter(group %in% c("A","B"),variable=="breast") 
-rates1
-
-```
-
-For such a test we need to test if the variances in the two groups are roughly the same. The easiest means of doing this is graphically:-
+The *null hypothesis* for such a test would be that the weight loss is the same between groups male and female. We seek to evidence to reject this hypothesis by calculating a test statistic. Firstly, we have to check for normality:-
 
 ```{r}
-ggplot(rates1, aes(x = group,y=value)) + geom_boxplot()
+ggplot(diet, aes(x = gender, y = weight.loss)) + geom_boxplot()
+
+group_by(diet, gender) %>% 
+  summarise(shapiro=shapiro.test(weight.loss)$p.value,variance=var(weight.loss))
 ```
 
-The boxplot in this case is somewhat misleading, as we can calculate that the variance in group B is nearly double that of A.
-
-```{r}
-rates1 %>% group_by(group) %>% 
-  summarise(Variance=var(value))
-
-```
+We conclude that the variances are approximately the same and both variables are normally-distributed
 
 
 We can now use the `t.test` function to perform an *independant* test. This will provide us with a *t* test statistic and a p-value. **However, it is up to us to interpret the p-value**.
 
 The first argument to `t.test` is the *R formula* notation for the test being performed. It allows us to define which columns in our dataset are the numeric and grouping variables in the test.
 
-This function allows various type of test to be performed by changing the appropriate arguments (see the help for `t.test` for details (`?t.test`)). For instance, we can tell the test that we believe our variances are not equal.
+This function allows various type of test to be performed by changing the appropriate arguments (see the help for `t.test` for details (`?t.test`)). For instance, we can tell the test that we believe our variances are equal or not.
 
 ```{r}
-t.test(value ~ group, data=rates1 ,var.equal = FALSE)
+t.test(weight.loss ~ gender, data=diet, var.equal=TRUE)
 ```
 
-We can see that the t-statistic we observe is consistent with the null hypothesis, that the rates of breast cancer are the same for groups A and B. That is, the probability of observing a t-statistic of 1.52 or more, or -1.52 or less, is quite high.
+We can see that the t-statistic we observe is consistent with the null hypothesis, that the weight loss in males and females is the same. That is, the probability of observing a t-statistic of 0.2 or more, or -0.2 or less, is quite high.
 
-This is not a significant result (p>0.05), so there is no evidence of a difference in breast cancer rates in groups A and B
+*This is not a significant result (p>0.05), so there is no evidence of a difference in weight loss between males and females*
 
-#### Exercise
+This test we assumed no relationship between the values being tested. i.e. a person in the study cannot be recorded as both male or female. 
 
-******
-******
-******
-
-Compare the rates of breast and lung cancer for patients in group A. Is there evidence of a significant difference?
-
-******
-******
-******
-
-
-## The Paired t test.......TWO dependant groups 
-
-In the previous test we assumed no relationship between the values being tested. However, we know from the experimental design that observations are made *for the same patient* for breast and lung cancer. If we want to test for differences between these variables, we can take the pairing into account. As you will see from the output, the hypothesis testing is performed on the *differences* of the two groups.
+We might wonder if there is actually any effect due to diet. To perform this test we can compare two columns from the `diet` data frame directly using the `$` notation.
 
 ```{r}
-rates2 <- rates %>% gather(variable, value, -group) %>%
-  filter(group =="A",variable %in% c("lung","breast")) 
+t.test(diet$final.weight, diet$initial.weight)
 ```
 
-```{r}
-ggplot(rates2, aes(x = variable,y=value)) + geom_boxplot()
-```
+The p-value is significant and shows that overall the weights of individuals is *different* before and after diet. However, this test is not specifically testing for a *decrease* after the diet (which we would really hope to be the case). By adding an extra argument `alternative=less` we get a different result
 
 ```{r}
-t.test(value~variable,data=rates2, paired = TRUE)
+t.test(diet$final.weight, diet$initial.weight,alternative = "less")
 ```
 
 
-At the moment we are only consider analyses where we have two groups (/samples) to compare. One technique to compare to multiple groups to is to apply multiple t-tests to the dataset. Later we will discover how `ANOVA` can be used on the same data.
+There is also extra information that we could employ; namely that the measurements of weight are made **on the same person** before and after dieting. This is a classic example of when to apply a paired t-test. We do not need to change the code much to perform such a test; only add an argument `paired=TRUE` to `t.test`.
 
 ```{r}
-rates3 <- rates %>% gather(variable, value, -group) %>%
-  filter(group=="A")
+t.test(diet$final.weight, diet$initial.weight,alternative = "less", paired=TRUE)
+```
 
-pairwise.t.test(rates3$value,rates3$variable)  
+The output of the test is quite informative as it suggest that testing has been performed on sets of differences. In actual fact, this is the same as performing something called a *one-sample test* on the differences we have already calculated:-
+
+```{r}
+t.test(diet$weight.loss)
 ```
 
 
@@ -415,7 +364,7 @@ Being able to use the `t-test` relies on the your data being normally-distribute
 
 ### Independant samples = Wilcoxon rank sum test (Mann Whitney U test)
 
-This test has many different names including the Wilcoxon, Wilcoxon two sample test, Wilcoxon-Mann-Whitney, Wilcoxon rank sum and the Mann-Whitney-U test. However, this test should notbe confused with the Wilcoxon signed rank test. To avoid confusion this test is usually referred to as the Mann-Whitney Utest, which is used when the dependent variable to be examined is continuous but the assumptions for parametric tests are violated.
+This test has many different names including the Wilcoxon, Wilcoxon two sample test, Wilcoxon-Mann-Whitney, Wilcoxon rank sum and the Mann-Whitney-U test. However, this test should not be confused with the Wilcoxon signed rank test. To avoid confusion this test is usually referred to as the Mann-Whitney U test, which is used when the dependent variable to be examined is continuous but the assumptions for parametric tests are violated.
 
 The assumptions of the Mann-Whitney U are as follows:
 
@@ -428,81 +377,81 @@ Fortunately, the R programmers have made the function to do a wilcox test simila
 Let's go back to our example of comparing breast cancer rates between groups A and B. The equivalent non-parametric version of the test we performed before is:-
 
 ```{r}
-wilcox.test(value~group, data=rates1)
+wilcox.test(weight.loss~gender, data=diet)
 ```
-
-Similarly, to compare breast and lung cancer rates in a non-parametric fashion we can do:-
-
-```{r}
-wilcox.test(value~variable,data=rates2)
-```
-
-### Paired samples = Wilcoxon signed rank test
 
 The `wilcox.test` is flexible in much the same way that `t.test` in. We can switch to applying a paired test by adding the argument `paired=TRUE`.
 
 ```{r}
-wilcox.test(value~variable,data=rates2,paired=TRUE)
+wilcox.test(diet$final.weight,diet$initial.weight, paired=TRUE)
 ```
 
+There is no difference in weight loss between males and females. However, this is not taking into account that there are different diets and some may work better depending on gender (or indeed age). If we attempt to test the difference between diets, the following happens:-
+
+```{r eval=FALSE}
+t.test(weight.loss ~ diet.type,data=diet)
+```
 
 ## Compare between MORE THAN TWO GROUPS 
+
 #### Parametric (ANOVA)
 
 The two-sample t-test is useful when we have just two groups of continuous data to compare. When we want to compare more than two groups, a one-way ANOVA can be used to simultaneously compare all groups, rather than carrying out several individual two-sample t-tests.  The main advantage of doing this is that it reduces the number of tests being carried out, meaning that the type I error rate (the probability of seeing a significant result just by chance) does not become inflated. 
 
-A one-way ANOVA compares group means by partitioning the variation in the data into *between group variance* and *within group variance*.
-
+A one-way ANOVA compares group means by partitioning the variation in the data into *between group variance* and *within group variance*. Like the other statistical tests we have encountered, the functions in R do the hard work of calculating the statistics. Performing the analysis is in two stages; fit the model using the `aov` function and then assess the significance using the `summary` function
 
 ```{r}
-rates3 <- gather(rates,variable, value, -group) %>%
-  filter(group=="A")
+ggplot(diet, aes(x = diet.type, y = weight.loss)) + geom_violin()
+group_by(diet, diet.type) %>% 
+  summarise(shapiro=shapiro.test(weight.loss)$p.value,variance=var(weight.loss))
 ```
 
 
 ```{r}
-anova <- aov(value ~ variable, data=rates3)
-anova
+anova <- aov(weight.loss ~ diet.type, data=diet)
 summary(anova)
 ```
 
-When the F-test provides a significant result it tells us that there is at least on difference in the groups. However, it does not tell us which group is different. For this, we can apply a "post-hoc test" such as the Tukey test.
+When the test provides a significant result it tells us that there is at least on difference in the groups. However, it does not tell us which group is different. For this, we can apply a "post-hoc test" such as the Tukey test. If `summary(anova)` did not produce a significant p-value, we wouldn't proceed with this step
 
 
 ```{r}
 TukeyHSD(anova)
 ```
 
+### Non-Parametric (Kruskal Wallis) 
 
-
-
-### Independant samples = kruskal Wallis
-
-```{r}
-
-
-```
-
-
-
+Data that do not meet the assumptions of ANOVA (e.g. normality) can be tested using a non-parametric alternative. The *Kruskal-Wallis* test if derived from the one-way ANOVA, but uses ranks rather than actual observations. It is also the extension of the Mann-Whitney U test to greater than two groups. 
 
 ```{r}
-kruskal.test(value ~ as.factor(variable), data=rates3)
+kruskal.test(weight.loss ~ as.factor(diet.type), data=diet)
 ```
 
+Like the one-way ANOVA this will only tell us that at least one group is different and not specifically which group(s). The post-hoc `dunn.test` is recommended which also performs multiple testing correction.
+
+```{r}
+library(dunn.test)
+dunn.test(diet$weight.loss,diet$diet.type,method = "Bonferroni")
+```
+
+At this point we could be about to recommend diet C to those that wish to lose weight. However, are there any other factors in the data that we should be considering? With `ggplot2` we can quite easily visualise the effects of multiple factors on the data. Lets add both gender and diet type into the plot.
+
+```{r}
+ggplot(diet, aes(x = diet.type, y = weight.loss,fill=gender)) + geom_boxplot()
+```
 
 ## Two-way ANOVA
 
-```{r}
-medulloblastoma <- readxl::read_xlsx("data/Medulloblastoma.xlsx")
-```
+The *formula* notation allows us to specify an *interaction* between gender and diet type. In other words, we are looking to see if the effect of diet type is different for males and females.
 
 ```{r}
-twoway <- aov(`C-myc` ~ Site + Size,data=medulloblastoma)
-summary(twoway)
+anova <- aov(weight.loss ~ diet.type*gender, data=diet)
+summary(anova)
 ```
 
+This tells us that an effect exists between diet type and gender, but like before we have to run a post-hoc test to discover more
+
 ```{r}
-ggplot(medulloblastoma,aes(x = Metastasis, y=`C-myc`)) + geom_boxplot()
+TukeyHSD(anova)
 ```
 
