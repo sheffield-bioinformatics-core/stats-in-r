@@ -23,7 +23,7 @@ Some of these materials are based on previous courses at Cancer Research Uk Camb
 
 # Part I - Contingency tables
 
-When working with categorical variables, we are usually interested in thefrequencies of the different categories in our sample. To display data for two or more categorical variables, cross-tabulations, or contingency tables, are commonly used - with 2 x 2 tables being the simplest. We can then test whether there is anassociation between the row factor and the column factor by a *chi-squared test* or a *Fisher’s exact test*.
+When working with categorical variables, we are usually interested in the frequencies of the different categories in our sample. To display data for two or more categorical variables, cross-tabulations, or contingency tables, are commonly used - with 2 x 2 tables being the simplest. We can then test whether there is anassociation between the row factor and the column factor by a *chi-squared test* or a *Fisher’s exact test*.
 
 To demonstrate the analysis of contingency tables we will use a dataset provided with the `vcd` package. You will need to install this package using the R command
 
@@ -39,7 +39,7 @@ The data frame `Arthritis` should then be accessible which is described as:-
 ```{r}
 #let's use the'Arthritis' dataset in the 'vcd' package 
 library(vcd)
-Arthritis
+head(Arthritis)
 ```
 
 <div class="alert alert-warning">
@@ -52,12 +52,19 @@ We can use the `summarise` function to obtain counts of a single variable with t
 
 
 
-```{r}
+```{r message=FALSE}
 library(tidyverse)
 ##one way table (count of one variable)
 group_by(Arthritis, Sex) %>% 
   summarise(N = n())
 ```
+
+We can visualise these counts as a *barplot*
+
+```{r}
+ggplot(Arthritis, aes(x = Sex)) + geom_bar()
+```
+
 
 Further manipulation of this table will give proportions (which will ultimately be used in the statistical testing)
 
@@ -129,9 +136,12 @@ group_by(Arthritis, Improved, Sex) %>%
 
 <div class="alert alert-warning">
 **Exercise**
-- Read the excel file called `EX Biostat P2.xls` into R 
 
-- Make a cross table named `GenderGrade` showing the gender in the rows and tumor grade in the columns
+- Read the excel file called `EX Biostat P2.xlsx` in the data folder into R 
+
+```{r eval=FALSE}
+tab <- readxl::read_xlsx("data/EX biostat P2.xlsx")
+```
 
 - Determine the percentage of females with Grade III tumor in the total sample 
 
@@ -141,13 +151,20 @@ group_by(Arthritis, Improved, Sex) %>%
 
 </div>
 
+```{r echo=FALSE,eval=FALSE}
+tab <- readxl::read_xlsx("data/EX biostat P2.xlsx")
+group_by(tab, Gender,`Tumor grade`) %>% 
+  summarise(N = n()) %>% 
+  tidyr::spread(`Tumor grade`,N)
+```
+
+
 
 # Part II - How to assess normality
 
 We will read some example data to illustrate how one would test for a normally-distributed variable. This property is important as it influences which test we should use.
 
-One of the best ways of displaying data is by using a graph. Graphs can make both simple and complex data easier to understand by making it easier to spot trends and patterns. We can use plots to view the distribution of our data (minimum, maximum, mid-point, spread etc) and to ensure that the values in our dataset seem realistic. Many statistical tests rely on the assumption that the data are normally distributed, which can be assessed using histograms or box plots (more later)
-
+One of the best ways of displaying data is by using a graph. Graphs can make both simple and complex data easier to understand by making it easier to spot trends and patterns. We can use plots to view the distribution of our data (minimum, maximum, mid-point, spread etc) and to ensure that the values in our dataset seem realistic (e.g. no outliers). Many statistical tests rely on the assumption that the data are normally distributed.
 
 First we will load the `tidyverse` set of packages that are recommended for data manipulation and visualisation. The data for this first section are to be found in the file `normal_example.csv` in the `data` folder. You will need to specify the file path accordingly.
 
@@ -174,7 +191,7 @@ A similar option is to produce a density curve. Here the y-axis is the *density*
 ggplot(df1, aes(x = x)) + geom_density()
 ```
 
-A box plot is an excellent way of displaying continuous data when you are interested in the spread of your data. The box of the box plot corresponds to the lower and upper quartiles of the respective observations and the bar within the box, the median. The whiskers of the box plot correspond to the distance betweenthe lower/upper quartile and thesmallerof: the smaller/largest measurement OR 1.5 times the inter quartile range.A disadvantage of the box plot is that you don’t see the exact data points. However, box plots are very useful in large datasets where plotting all of the data may give an unclear picture of the shape of your data.
+A box plot is an excellent way of displaying continuous data when you are interested in the spread of your data. The box of the box plot corresponds to the lower and upper quartiles of the respective observations and the bar within the box, the median. The whiskers of the box plot correspond to the distance betweenthe lower/upper quartile and thesmallerof: the smaller/largest measurement OR 1.5 times the inter quartile range. A disadvantage of the box plot is that you don’t see the exact data points. However, box plots are very useful in large datasets where plotting all of the data may give an unclear picture of the shape of your data.
 
 ```{r}
 ggplot(df1, aes(x="",y=x)) + geom_boxplot()
@@ -193,7 +210,9 @@ Finally, we have a "*qq-plot*" which allows to compare the quantiles of our data
 ggplot(df1,aes(sample=x)) + geom_qq() + geom_qq_line(col="red")
 ```
 
-These graphical methods are by far the easiest way to assess if a given dataset is normally-distributed. For "real-life" data, the results are unlikely to give a perfect plot, so some degree of judgement and prior experience with the data type are required. 
+These graphical methods are by far the easiest way to assess if a given dataset is normally-distributed.
+
+For "real-life" data, the results are unlikely to give a perfect plot, so some degree of judgement and prior experience with the data type are required.  Indeed, it should be noted that the dataset visualised in the above plots was sampled from a normal distribution. Even then, the plots were not 100% convincing!
 
 
 In fact, these data were simulated from a normal distribution. Now lets read some more realistic data
@@ -208,13 +227,15 @@ df2
 
 <div class="alert alert-warning">
 **Exercise**
+
 - Are the datasets `x` and `y`, contained in the data frame `df2` normally-distributed or not? Use the plots introduced above to justify your answer.
+
 </div>
 
 
 ## Tests for normality
 
-There are a couple of methods for testing whether variables are normally-distributed or not. If the p-value is sufficiently small then we conclude that the data are not normally distributed. However, some statisticians prefer to use graphical methods and their intuition about the data or prior knowledge of the data type (e.g. some measures are generally believed to be normally-distributed)
+Although their usage is contentious amongst statisticians, there are a few methods for testing whether variables are normally-distributed or not. If the p-value is sufficiently small then we conclude that the data are not normally distributed. However, some statisticians prefer to use graphical methods and their intuition about the data or prior knowledge of the data type (e.g. some measures are generally believed to be normally-distributed)
 
 ```{r}
 
@@ -241,13 +262,12 @@ ks.test(df1$x,"pnorm", mean=mean(df1$x), sd=sd(df1$x))
 
 ## Descriptive Statistics
 
-In the [accompanying R course](http://sbc.shef.ac.uk/r-crash-course/) we have seen how to produce summary statistics of columns in a dataset. For a dataset that is normally-distributed, appropriate measures of the average and variability are the mean and standard deviation. Both these functions are available within R and can be used in conjunction with the `summarise` function in `tidyverse`.
+In the [accompanying R course](http://sbc.shef.ac.uk/r-crash-course/) we have seen how to produce summary statistics of columns in a dataset. For a dataset that is normally-distributed, appropriate measures of the average and variability are the *mean* and *standard deviation*. Both these functions are available within R and can be used in conjunction with the `summarise` function in `tidyverse`.
 
 ```{r}
 summarise(df1, Mean = mean(x), 
           Var= var(x),
-          SD = sd(x),
-          SE = sd(x) / sqrt(n()))
+          SD = sd(x))
 ```
 
 The `psych` package provides a convenient function `describe` for generating these statistics, and more
@@ -267,15 +287,16 @@ describe(df2)
 - Read the excel file called ‘EX Biostat P1.xlsx’ from the `data` folder into R 
 - Identify if the age and hospitalization days are normally distributed
 - Calculate the appropriate descriptive statistics [mean±SD or median (IQ range)] for each variable 
+
 </div>
 
 
 
 # Part III - Significance tests for continuous variables, 
 
-In this part we will show how to perform tests to compare 1, 2 (or more) continuous variables. The dataset describes individuals that have been following different diets and their age and gender. The main goal of interest is to determine which of three competing diet regimes results in the greatest weight loss.
+In this part we will show how to perform tests to compare 1, 2 (or more) continuous variables. The dataset, provided by MASH at The University of Sheffield, describes individuals that have been following different diets and their age and gender. The main goal of interest is to determine which of three competing diet regimes results in the greatest weight loss.
 
-```{r}
+```{r message=FALSE}
 diet <- read_csv("data/diet.csv")
 diet
 ```
@@ -286,7 +307,7 @@ diet
 
 The first hypothesis we will test is whether the people in the study are overweight or not. This first involves some manipulation of the table to calculate an extra variable; the Body Mass Index (BMI). We will test if people in our study are overweight, where overweight is defined as having a BMI over 25.
 
-$ BMI = weight  / height^2 $
+$BMI = weight  / height^2$
 
 *where the weight is measured in kg and the height in metres*
 
@@ -307,7 +328,7 @@ ggplot(diet, aes(x = BMI)) + geom_histogram()
 
 ```
 
-The one-sample t-test is implemented in the function `t.test`. The only input we need to specify is a *vector* of numeric values and it will perform a statistical test
+The one-sample t-test is implemented in the function `t.test`. The only input we need to specify is a *vector* of numeric values and it will perform a statistical test. For simplicity, we can use the `$` notation in R to extract the column. This will provide us with a *t* test statistic and a p-value. **However, it is up to us to interpret the p-value**.
 
 ```{r eval=FALSE}
 t.test(diet$BMI)
@@ -366,9 +387,7 @@ group_by(diet, gender) %>%
 We conclude that the variances are approximately the same and both variables are normally-distributed
 
 
-We can now use the `t.test` function to perform an *independant* test. This will provide us with a *t* test statistic and a p-value. **However, it is up to us to interpret the p-value**.
-
-The first argument to `t.test` is the *R formula* notation for the test being performed. It allows us to define which columns in our dataset are the numeric and grouping variables in the test.
+We can now use the `t.test` function to perform an *independant* test. The first argument to `t.test` is the *R formula* notation for the test being performed. It allows us to define which columns in our dataset are the numeric and grouping variables in the test.
 
 This function allows various type of test to be performed by changing the appropriate arguments (see the help for `t.test` for details (`?t.test`)). For instance, we can tell the test that we believe our variances are equal or not.
 
@@ -379,10 +398,6 @@ t.test(weight.loss ~ gender, data=diet, var.equal=TRUE)
 We can see that the t-statistic we observe is consistent with the null hypothesis, that the weight loss in males and females is the same. That is, the probability of observing a t-statistic of 0.2 or more, or -0.2 or less, is quite high.
 
 *This is not a significant result (p>0.05), so there is no evidence of a difference in weight loss between males and females*
-
-This test we assumed no relationship between the values being tested. i.e. a person in the study cannot be recorded as both male or female. 
-
-
 
 ## Non- Parametric alternatives (Wilcoxon test)
 
@@ -395,12 +410,14 @@ This test has many different names including the Wilcoxon, Wilcoxon two sample t
 The assumptions of the Mann-Whitney U are as follows:
 
 1.The dependent variable is ordinal or continuous.
+
 2.The data consist of a randomly selected sample of independent observations from two independent groups.
+
 3.The dependent variables for the two independent groups share a similar shape.
 
 Fortunately, the R programmers have made the function to do a wilcox test similar to doing a t-test. **The difficulty is in choosing the correct to apply - which R will not advise you on**.
 
-Let's go back to our example of comparing breast cancer rates between groups A and B. The equivalent non-parametric version of the test we performed before is:-
+Let's go back to our example of comparing weight loss between groups male and female. The equivalent non-parametric version of the test we performed before is:-
 
 ```{r}
 wilcox.test(weight.loss~gender, data=diet)
@@ -412,11 +429,13 @@ The `wilcox.test` is flexible in much the same way that `t.test` in. We can swit
 wilcox.test(diet$final.weight,diet$initial.weight, paired=TRUE)
 ```
 
-There is no difference in weight loss between males and females. However, this is not taking into account that there are different diets and some may work better depending on gender (or indeed age). If we attempt to test the difference between diets, the following happens:-
+There is no difference in weight loss between males and females. However, the test of interest is whether some diets are more beneficial. If we attempt to test the difference between diets, the following happens:-
 
 ```{r eval=FALSE}
 t.test(weight.loss ~ diet.type,data=diet)
 ```
+
+In other words, the t-test is only applicable for comparing two groups and we have three diets that we want to compare.
 
 ## Compare between MORE THAN TWO GROUPS 
 
@@ -424,7 +443,7 @@ t.test(weight.loss ~ diet.type,data=diet)
 
 The two-sample t-test is useful when we have just two groups of continuous data to compare. When we want to compare more than two groups, a one-way ANOVA can be used to simultaneously compare all groups, rather than carrying out several individual two-sample t-tests.  The main advantage of doing this is that it reduces the number of tests being carried out, meaning that the type I error rate (the probability of seeing a significant result just by chance) does not become inflated. 
 
-A one-way ANOVA compares group means by partitioning the variation in the data into *between group variance* and *within group variance*. Like the other statistical tests we have encountered, the functions in R do the hard work of calculating the statistics. Performing the analysis is in two stages; fit the model using the `aov` function and then assess the significance using the `summary` function
+In order to justify if an ANOVA test is appropriate we have to test for normality.
 
 ```{r}
 ggplot(diet, aes(x = diet.type, y = weight.loss)) + geom_violin()
@@ -432,6 +451,7 @@ group_by(diet, diet.type) %>%
   summarise(shapiro=shapiro.test(weight.loss)$p.value,variance=var(weight.loss))
 ```
 
+A one-way ANOVA compares group means by partitioning the variation in the data into *between group variance* and *within group variance*. Like the other statistical tests we have encountered, the functions in R do the hard work of calculating the statistics. Performing the analysis is in two stages; fit the model using the `aov` function and then assess the significance using the `summary` function
 
 ```{r}
 anova <- aov(weight.loss ~ diet.type, data=diet)
@@ -460,7 +480,7 @@ library(dunn.test)
 dunn.test(diet$weight.loss,diet$diet.type,method = "Bonferroni")
 ```
 
-At this point we could be about to recommend diet C to those that wish to lose weight. However, are there any other factors in the data that we should be considering? With `ggplot2` we can quite easily visualise the effects of multiple factors on the data. Lets add both gender and diet type into the plot.
+At this point we could be about to recommend diet C to those that wish to lose weight. However, are there any other factors in the data that we should be considering? With `ggplot2` we can quite easily visualise the effects of multiple factors on the data. Lets add both gender and diet type into the plot. It now appears that diet C is having an effect on males but not females.
 
 ```{r}
 ggplot(diet, aes(x = diet.type, y = weight.loss,fill=gender)) + geom_boxplot()
