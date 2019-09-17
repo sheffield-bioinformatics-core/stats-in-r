@@ -65,6 +65,9 @@ We can visualise these counts as a *barplot*
 ggplot(Arthritis, aes(x = Sex)) + geom_bar()
 ```
 
+```{r}
+ggplot(Arthritis, aes(x = Sex,fill=Improved)) + geom_bar(position="dodge")
+```
 
 Further manipulation of this table will give proportions (which will ultimately be used in the statistical testing)
 
@@ -75,7 +78,15 @@ group_by(Arthritis, Sex) %>%
   mutate(prop = prop.table(N))
 ```
 
-With `group_by` we can use two variables to summarise by. The order in which they are specified will dictate how the proportions are calculated. In the below example, proportions are defined in terms of Sex first, and then Improved.
+With `group_by` we can use two variables to summarise by. The order in which they are specified will dictate how the proportions are calculated. If we simply want the proportions over the whole dataset, we could divide by the total number of rows
+
+```{r}
+group_by(Arthritis, Sex, Improved) %>% 
+  summarise(N = n()) %>% 
+  mutate(prop = N/84)
+```
+
+ In the below example, proportions are defined in terms of Sex first, and then Improved.
 
 ```{r}
 group_by(Arthritis, Sex, Improved) %>% 
@@ -92,13 +103,7 @@ group_by(Arthritis, Improved, Sex) %>%
   mutate(prop = prop.table(N))
 ```
 
-If we simply want the proportions over the whole dataset, we could divide by the total number of rows
 
-```{r}
-group_by(Arthritis, Sex, Improved) %>% 
-  summarise(N = n()) %>% 
-  mutate(prop = N/84)
-```
 
 The function `chisq.test` can be used to assess whether differences in proportions are significant or not. Unfortunately it requires data to be presented in a different format; that of a contingency table with rows and columns for each variable being investigated. We actually don't need to calculate the proportions; R will do this for us.
 
@@ -110,7 +115,7 @@ group_by(Arthritis, Improved, Treatment) %>%
   spread(Improved, N)
 ```
 
-The `chisq.test` function will provide a p-value that we can use to assess significance.
+The `chisq.test` function will provide a p-value that we can use to assess significance. However, we can only use columns with numerical data so have to exclude the Treatment column.
 
 ```{r}
 group_by(Arthritis, Improved, Treatment) %>% 
@@ -143,9 +148,9 @@ group_by(Arthritis, Improved, Sex) %>%
 tab <- readxl::read_xlsx("data/EX biostat P2.xlsx")
 ```
 
-- Determine the percentage of females with Grade III tumor in the total sample 
+- Determine the proportion of females with Grade III tumor in the **total sample** 
 
-- Determine the percentage of Grade III tumors within females only
+- Determine the proportion of Grade III tumors **within females** only
 
 - Use the appropriate test to check if the tumor grade depends on the gender 
 
@@ -153,12 +158,24 @@ tab <- readxl::read_xlsx("data/EX biostat P2.xlsx")
 
 ```{r echo=FALSE,eval=FALSE}
 tab <- readxl::read_xlsx("data/EX biostat P2.xlsx")
-group_by(tab, Gender,`Tumor grade`) %>% 
+
+#1) 
+
+group_by(tab, TumorGrade, Gender) %>% 
+  summarise(N=n()) %>% 
+      mutate(prop = N / 130) 
+#2)
+group_by(tab, Gender,TumorGrade) %>% 
+  summarise(N=n()) %>% 
+    mutate(prop = prop.table(N))
+
+#3) 
+group_by(tab, TumorGrade,Gender) %>% 
   summarise(N = n()) %>% 
-  tidyr::spread(`Tumor grade`,N)
+  tidyr::spread(TumorGrade,N) %>% 
+  select(-Gender) %>% 
+  chisq.test
 ```
-
-
 
 # Part II - How to assess normality
 
@@ -232,6 +249,21 @@ df2
 
 </div>
 
+### Combining Histograms and Density 
+
+When assessing the distribution of a variable, you might be tempted to plot the histogram and density on the same plot. Conventional `ggplot` would suggest the following code
+
+```{r}
+ggplot(df1, aes(x=x)) + geom_histogram() + geom_density()
+```
+
+However, this doesn't work. If you check the y-axis limits on the histogram and density plots, you'll notice they are on a different scale. After some digging around the solution is [as follows](http://www.cookbook-r.com/Graphs/Plotting_distributions_(ggplot2)/)
+
+
+```{r}
+ggplot(df1, aes(x=x)) + geom_histogram(aes(y=..density..)) + geom_density()
+```
+
 
 ## Tests for normality
 
@@ -292,7 +324,7 @@ describe(df2)
 
 
 
-# Part III - Significance tests for continuous variables, 
+# Part III - Significance tests for continuous variables
 
 In this part we will show how to perform tests to compare 1, 2 (or more) continuous variables. The dataset, provided by MASH at The University of Sheffield, describes individuals that have been following different diets and their age and gender. The main goal of interest is to determine which of three competing diet regimes results in the greatest weight loss.
 
@@ -519,15 +551,13 @@ The excel file ‘RCC’ contains data about the expression levels of some genes
 
 2. ANXA expression levels vary between unilateral and bilateral tumors
 
-3. H19 levels differ in the same individual at time of diagnosis, after giving one course of chemotherapy and after giving a second course. 
+3. Individuals with RCC grade II have different levels of E2F3 than those with grade III or IV 
 
-4. Individuals with RCC grade II have different levels of E2F3 than those with grade III or IV 
+4. The mean value of miR499 decreases significantly after treatment
 
-5. The mean value of miR499 decreases significantly after treatment
+5. PDC4, DFFA and ANXA are expressed differently in a patient with RCC  
 
-6. PDC4, DFFA and ANXA are expressed differently in a patient with RCC  
-
-7. MALAT1 is upregulated (higher) in RCC patients compared to E2F3  
+6. MALAT1 is upregulated (higher) in RCC patients compared to E2F3  
 
 
 </div>
