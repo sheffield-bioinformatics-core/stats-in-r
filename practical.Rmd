@@ -154,6 +154,8 @@ tab <- readxl::read_xlsx("data/EX biostat P2.xlsx")
 
 - Use the appropriate test to check if the tumor grade depends on the gender 
 
+- Use the appropriate test to check if the effective of drug type depends on the gender 
+
 </div>
 
 ```{r echo=FALSE,eval=FALSE}
@@ -173,6 +175,13 @@ group_by(tab, Gender,TumorGrade) %>%
 group_by(tab, TumorGrade,Gender) %>% 
   summarise(N = n()) %>% 
   tidyr::spread(TumorGrade,N) %>% 
+  select(-Gender) %>% 
+  chisq.test
+
+#4)
+group_by(tab, EffectiveDrug,Gender) %>% 
+  summarise(N = n()) %>% 
+  tidyr::spread(EffectiveDrug,N) %>% 
   select(-Gender) %>% 
   chisq.test
 ```
