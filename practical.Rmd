@@ -118,12 +118,25 @@ group_by(Arthritis, Improved, Treatment) %>%
 The `chisq.test` function will provide a p-value that we can use to assess significance. However, we can only use columns with numerical data so have to exclude the Treatment column.
 
 ```{r}
-group_by(Arthritis, Improved, Treatment) %>% 
+ group_by(Arthritis, Improved, Treatment) %>% 
   summarise(N = n()) %>% 
   spread(Improved, N) %>%
   select(-Treatment) %>% 
   chisq.test()
 ```
+
+The result of the test is displayed to the screen. If we want extra information we can save the result as a variable and extract the relevant information with the `$` syntax.
+
+
+```{r}
+res <- group_by(Arthritis, Improved, Treatment) %>% 
+  summarise(N = n()) %>% 
+  spread(Improved, N) %>%
+  select(-Treatment) %>% 
+  chisq.test()
+res$expected
+```
+
 
 The chi-squared test is most suited to large datasets. As a general rule, the chi-squared test is appropriate if at least 80% of the cells have an expected frequency of 5 or greater. In addition, none of the cells should have an expected frequency less than 1. If the expected values are very small, categories may be combined (if it makes sense to do so) to create fewer larger categories. 
 
@@ -154,7 +167,7 @@ tab <- readxl::read_xlsx("data/EX biostat P2.xlsx")
 
 - Use the appropriate test to check if the tumor grade depends on the gender 
 
-- Use the appropriate test to check if the effective of drug type depends on the gender 
+- Use the appropriate test to check if the effective drug type depends on the gender 
 
 </div>
 
@@ -179,7 +192,7 @@ group_by(tab, TumorGrade,Gender) %>%
   chisq.test
 
 #4)
-group_by(tab, EffectiveDrug,Gender) %>% 
+res <- group_by(tab, EffectiveDrug,Gender) %>% 
   summarise(N = n()) %>% 
   tidyr::spread(EffectiveDrug,N) %>% 
   select(-Gender) %>% 
