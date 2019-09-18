@@ -167,28 +167,19 @@ tab <- readxl::read_xlsx("data/EX biostat P2.xlsx")
 
 </div>
 
-```{r echo=FALSE,eval=FALSE}
+
+**SOLUTION**
+
+```{r eval=FALSE}
 tab <- readxl::read_xlsx("data/EX biostat P2.xlsx")
 
-#1) 
-
-group_by(tab, TumorGrade, Gender) %>% 
-  summarise(N=n()) %>% 
-      mutate(prop = N / 130) 
-#2)
-group_by(tab, Gender,TumorGrade) %>% 
-  summarise(N=n()) %>% 
-    mutate(prop = prop.table(N))
-
-#3) 
 group_by(tab, TumorGrade,Gender) %>% 
   summarise(N = n()) %>% 
   tidyr::spread(TumorGrade,N) %>% 
   select(-Gender) %>% 
   chisq.test
 
-#4)
-res <- group_by(tab, EffectiveDrug,Gender) %>% 
+group_by(tab, EffectiveDrug,Gender) %>% 
   summarise(N = n()) %>% 
   tidyr::spread(EffectiveDrug,N) %>% 
   select(-Gender) %>% 
