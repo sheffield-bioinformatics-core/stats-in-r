@@ -161,10 +161,6 @@ group_by(Arthritis, Improved, Sex) %>%
 tab <- readxl::read_xlsx("data/EX biostat P2.xlsx")
 ```
 
-- Determine the proportion of females with Grade III tumor in the **total sample** 
-
-- Determine the proportion of Grade III tumors **within females** only
-
 - Use the appropriate test to check if the tumor grade depends on the gender 
 
 - Use the appropriate test to check if the effective drug type depends on the gender 
