@@ -11,7 +11,7 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,message=FALSE)
 ```
 
 # Acknowledgement
@@ -243,20 +243,10 @@ For "real-life" data, the results are unlikely to give a perfect plot, so some d
 
 In fact, these data were simulated from a normal distribution. Now lets read some more realistic data
 
-```{r}
-df2 <- read_csv("data/toy_example.csv")
-df2
-```
-******
-******
-******
 
-<div class="alert alert-warning">
-**Exercise**
 
-- Are the datasets `x` and `y`, contained in the data frame `df2` normally-distributed or not? Use the plots introduced above to justify your answer.
 
-</div>
+
 
 ### Combining Histograms and Density 
 
@@ -297,10 +287,6 @@ ks.test(df1$x,"pnorm", mean=mean(df1$x), sd=sd(df1$x))
 #Shapiro....smaller samples but more strict(<5000)
 ```
 
-
-
-
-
 ## Descriptive Statistics
 
 In the [accompanying R course](http://sbc.shef.ac.uk/r-crash-course/) we have seen how to produce summary statistics of columns in a dataset. For a dataset that is normally-distributed, appropriate measures of the average and variability are the *mean* and *standard deviation*. Both these functions are available within R and can be used in conjunction with the `summarise` function in `tidyverse`.
@@ -312,14 +298,6 @@ summarise(df1, Mean = mean(x),
 ```
 
 The `psych` package provides a convenient function `describe` for generating these statistics, and more
-
-```{r}
-library(psych)
-describe(df2)
-
-```
-
-
 
 
 <div class="alert alert-warning">
