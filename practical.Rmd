@@ -114,7 +114,7 @@ t3
 ```
 
 
-The function `chisq.test` can be used to assess whether differences in proportions are significant or not. Unfortunately it requires data to be presented in a different format; that of a contingency table with rows and columns for each variable being investigated. We actually don't need to calculate the proportions; R will do this for us.
+The function `chisq.test` can be used to assess whether differences in proportions are significant or not. We actually don't need to calculate the proportions; R will do this for us.
 
 
 ```{r}
