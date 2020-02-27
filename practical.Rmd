@@ -44,12 +44,6 @@ library(vcd)
 head(Arthritis)
 ```
 
-<div class="alert alert-warning">
-
-**Question: What do you think the null hypothesis for this dataset might be? How would you test it and what would your summary statistics be?**
-
-</div>
-
 In base R, we can extract a column from a table using the `$` notation
 
 ```{r message=FALSE}
@@ -113,6 +107,12 @@ t3
 
 ```
 
+```{r}
+#we can also put them all in a multi-dimensional table
+t4 <- ftable(Arthritis$Sex, Arthritis$Improved, Arthritis$Treatment)
+t4
+```
+
 
 The function `chisq.test` can be used to assess whether differences in proportions are significant or not. We actually don't need to calculate the proportions; R will do this for us.
 
@@ -146,6 +146,7 @@ fisher.test(t2, alternative = "one-sided", conf.level = 0.99)
 
 ```{r}
 ##3 variables
+t3
 mantelhaen.test(t3)
 ```
 
@@ -215,6 +216,22 @@ A similar option is to produce a density curve. Here the y-axis is the *density*
 ggplot(df1, aes(x = x)) + geom_density()
 ```
 
+### Combining Histograms and Density 
+
+When assessing the distribution of a variable, you might be tempted to plot the histogram and density on the same plot. Conventional `ggplot` would suggest the following code
+
+```{r}
+ggplot(df1, aes(x=x)) + geom_histogram() + geom_density()
+```
+
+However, this doesn't work. If you check the y-axis limits on the histogram and density plots, you'll notice they are on a different scale. After some digging around the solution is [as follows](http://www.cookbook-r.com/Graphs/Plotting_distributions_(ggplot2)/)
+
+
+```{r}
+ggplot(df1, aes(x=x)) + geom_histogram(aes(y=..density..)) + geom_density()
+```
+
+
 A box plot is an excellent way of displaying continuous data when you are interested in the spread of your data. The box of the box plot corresponds to the lower and upper quartiles of the respective observations and the bar within the box, the median. The whiskers of the box plot correspond to the distance betweenthe lower/upper quartile and thesmallerof: the smaller/largest measurement OR 1.5 times the inter quartile range. A disadvantage of the box plot is that you don’t see the exact data points. However, box plots are very useful in large datasets where plotting all of the data may give an unclear picture of the shape of your data.
 
 ```{r}
@@ -240,27 +257,6 @@ For "real-life" data, the results are unlikely to give a perfect plot, so some d
 
 
 In fact, these data were simulated from a normal distribution. Now lets read some more realistic data
-
-
-
-
-
-
-### Combining Histograms and Density 
-
-When assessing the distribution of a variable, you might be tempted to plot the histogram and density on the same plot. Conventional `ggplot` would suggest the following code
-
-```{r}
-ggplot(df1, aes(x=x)) + geom_histogram() + geom_density()
-```
-
-However, this doesn't work. If you check the y-axis limits on the histogram and density plots, you'll notice they are on a different scale. After some digging around the solution is [as follows](http://www.cookbook-r.com/Graphs/Plotting_distributions_(ggplot2)/)
-
-
-```{r}
-ggplot(df1, aes(x=x)) + geom_histogram(aes(y=..density..)) + geom_density()
-```
-
 
 ## Tests for normality
 
@@ -424,7 +420,7 @@ Being able to use the `t-test` relies on the your data being normally-distribute
 
 ### Independant samples = Wilcoxon rank sum test (Mann Whitney U test)
 
-This test has many different names including the Wilcoxon, Wilcoxon two sample test, Wilcoxon-Mann-Whitney, Wilcoxon rank sum and the Mann-Whitney-U test. However, this test should not be confused with the Wilcoxon signed rank test. To avoid confusion this test is usually referred to as the Mann-Whitney U test, which is used when the dependent variable to be examined is continuous but the assumptions for parametric tests are violated.
+This test has many different names including the Wilcoxon, Wilcoxon two sample test, Wilcoxon-Mann-Whitney, Wilcoxon rank sum and the Mann-Whitney-U test. However, this test should not be confused with the Wilcoxon signed rank test (which is used for paired tests). To avoid confusion this test is usually referred to as the Mann-Whitney U test, which is used when the dependent variable to be examined is continuous but the assumptions for parametric tests are violated.
 
 The assumptions of the Mann-Whitney U are as follows:
 
@@ -434,7 +430,7 @@ The assumptions of the Mann-Whitney U are as follows:
 
 3.The dependent variables for the two independent groups share a similar shape.
 
-Fortunately, the R programmers have made the function to do a wilcox test similar to doing a t-test. **The difficulty is in choosing the correct to apply - which R will not advise you on**.
+Fortunately, the R programmers have made the function to do a wilcox test similar to doing a t-test. **The difficulty is in choosing the correct test to apply - which R will not advise you on**.
 
 Let's go back to our example of comparing weight loss between groups male and female. The equivalent non-parametric version of the test we performed before is:-
 
@@ -483,6 +479,11 @@ When the test provides a significant result it tells us that there is at least o
 ```{r}
 TukeyHSD(anova)
 ```
+
+```{r}
+plot(TukeyHSD(anova))
+```
+
 
 ### Non-Parametric (Kruskal Wallis) 
 
@@ -548,4 +549,6 @@ The excel file ‘RCC’ contains data about the expression levels of some genes
 
 
 </div>
+
+# Solutions
 
