@@ -154,10 +154,10 @@ mantelhaen.test(t3)
 <div class="alert alert-warning">
 **Exercise**
 
-- Read the excel file called `EX Biostat P2.xlsx` in the data folder into R 
+- Read the excel file called `EX Biostat P1.xlsx` in the data folder into R 
 
 ```{r eval=FALSE}
-tab <- readxl::read_xlsx("data/EX biostat P2.xlsx")
+tab <- readxl::read_xlsx("data/EX Biostat P1.xlsx")
 ```
 
 - Use the appropriate test to check if the tumor grade depends on the gender 
