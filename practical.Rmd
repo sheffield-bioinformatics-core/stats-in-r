@@ -154,36 +154,19 @@ mantelhaen.test(t3)
 <div class="alert alert-warning">
 **Exercise**
 
-- Read the excel file called `EX Biostat P1.xlsx` in the data folder into R 
-
+1- Read the excel file called ‘EX Biostat P1’ into R 
+2- Make a cross table showing the gender in the rows and tumor grade in the columns
+3- Define the percentage of Grade III tumors within females 
+4- Add a column in the table showing the sum of the 3 grades in males and in females and state the total number of males and females in the sample 
+5- Use the appropriate test to check if the tumor grade depends on the gender 
 ```{r eval=FALSE}
 tab <- readxl::read_xlsx("data/EX Biostat P1.xlsx")
 ```
 
-- Use the appropriate test to check if the tumor grade depends on the gender 
-
-- Use the appropriate test to check if the effective drug type depends on the gender 
-
 </div>
 
 
-**SOLUTION**
 
-```{r eval=FALSE}
-tab <- readxl::read_xlsx("data/EX biostat P2.xlsx")
-
-group_by(tab, TumorGrade,Gender) %>% 
-  summarise(N = n()) %>% 
-  tidyr::spread(TumorGrade,N) %>% 
-  select(-Gender) %>% 
-  chisq.test
-
-group_by(tab, EffectiveDrug,Gender) %>% 
-  summarise(N = n()) %>% 
-  tidyr::spread(EffectiveDrug,N) %>% 
-  select(-Gender) %>% 
-  chisq.test
-```
 
 # Part II - How to assess normality
 
@@ -297,9 +280,9 @@ The `psych` package provides a convenient function `describe` for generating the
 <div class="alert alert-warning">
 **Exercise**
 
-- Read the excel file called ‘EX Biostat P1.xlsx’ from the `data` folder into R 
-- Identify if the age and hospitalization days are normally distributed
-- Calculate the appropriate descriptive statistics [mean±SD or median (IQ range)] for each variable 
+1- Read the excel file called ‘EX Biostat P2’ into R 
+2- Identify if the age and hospitalization days are normally distributed
+3- Use the appropriate descriptive statistics [mean±SD or median (IQ range)] for each variable
 
 </div>
 
@@ -529,26 +512,133 @@ TukeyHSD(anova)
 <div class="alert alert-warning">
 **Exercise**
 
-The excel file ‘RCC’ contains data about the expression levels of some genes in patients with renal cell carcinoma. In your study, you put the following hypotheses.
-
-**Please test those alternative hypotheses and state whether you will accept or reject each one.**
-
-</div>
-
-1. Females have a higher level of E2F3 than males 
-
-2. ANXA expression levels vary between unilateral and bilateral tumors
-
-3. Individuals with RCC grade II have different levels of E2F3 than those with grade III or IV 
-
-4. The mean value of miR499 decreases significantly after treatment
-
-5. PDC4, DFFA and ANXA are expressed differently in a patient with RCC  
-
-6. MALAT1 is upregulated (higher) in RCC patients compared to E2F3  
-
-
+The excel file ‘RCC2’ contains data about the expression levels of some genes in patients with renal cell carcinoma. In your study, you put the following hypotheses.
+Please test those alternative hypotheses and state whether you will accept or reject each one.
+1.	Females have a higher level of E2F3 than males 
+2.	ANXA expression levels vary between unilateral and bilateral tumors
+4.	Individuals with RCC grade II have different levels of E2F3 than those with grade III or IV 
+5.	The mean value of miR499 decreases significantly after treatment
+6.	DFFA is higher in patients with grade IV tumors
 </div>
 
 # Solutions
+
+**To be revealed during the workshop!**
+
+## Part 1
+
+```{r eval=FALSE, echo=FALSE}
+##1-Read the excel file called 'EX Biostat P1' into R 
+Biostat1 <- read.table(file = "clipboard",header=TRUE,sep="\t")
+
+##2-Make a cross table showing the gender in the rows and tumor grade in the columns
+GenderGrade <- table(Biostat1$Gender, Biostat1$Tumor.grade)
+GenderGrade
+
+##3-Define the percentage of Grade III tumors within females 
+prop.table(GenderGrade,1)*100 #(42.3%)
+
+##4-Add a column in the table showing the sum of the 3 grades in males and in females and state the total number of males and females in the sample 
+addmargins(GenderGrade,2) #(71 Females, 59 males)
+
+##5-Use the appropriate test to check if the tumor grade depends on the gender 
+chisq.test(GenderGrade) #grade depends on gender (significant)
+
+```
+
+## Part 2
+
+```{r eval=FALSE, echo=FALSE}
+##1-Read the excel file called 'EX Biostat P2' into R 
+Biostat2 <- read.table(file="clipboard",header = T,sep="\t")
+
+##2-Identify if the age and hospitalization days are normally distributed
+library(ggplot2)
+ggplot(Biostat2, aes(x=Age)) + geom_histogram(aes(y=..density..)) + geom_density()
+ggplot(Biostat2, aes(x="",y=Age))  + geom_violin() + geom_boxplot()
+ggplot(Biostat2,aes(sample=Age)) + geom_qq() + geom_qq_line()
+shapiro.test(Biostat2$Age)
+# Age normally distributed
+
+ggplot(Biostat2, aes(x=hospitalization.days)) + geom_histogram(aes(y=..density..)) + geom_density()
+ggplot(Biostat2, aes(x="",y=hospitalization.days))  + geom_violin() + geom_boxplot()
+ggplot(Biostat2,aes(sample=hospitalization.days)) + geom_qq() + geom_qq_line()
+shapiro.test(Biostat2$hospitalization.days)
+# hospitalization days NOT normally distributed
+
+##3-Use the appropriate descriptive statistics [mean?SD or median (IQ range)] for each variable
+library(tidyverse)
+summarise(Biostat2, MeanAge = mean(Age), sdAge = sd(Age), 
+          medianHospDays=median(hospitalization.days), 
+          Q1=quantile(hospitalization.days, 0.25), 
+          Q3=quantile(hospitalization.days, 0.75))
+#Age: 9.54 ?2.89 [mean?SD]  & Hospitalization days: 11.5 (9.00 - 14.25) [median(IQ range)]
+```
+
+## Part 3
+
+```{r eval=FALSE, echo=FALSE}
+RCC2 <- read.table(file = "clipboard",header=TRUE,sep="\t")
+
+library(ggplot2)
+library(tidyverse)
+
+##1.Females have a higher level of E2F3 than males 
+#check normality
+ggplot(RCC2,aes(sample=E2F3)) + geom_qq() + geom_qq_line() +facet_wrap(~gender) #by qqplot
+group_by(RCC2,gender) %>% summarise(shapiro=shapiro.test(E2F3)$p.value) #by shapiro
+#both groups normally distributed
+#parametric * 2 groups --> t-test
+t.test(RCC2$E2F3 ~ RCC2$gender) 
+#ANSWER=REJECT
+
+##2.ANXA expression levels vary between unilateral and bilateral tumors 
+#check normality
+ggplot(RCC2,aes(sample=ANXA)) + geom_qq() + geom_qq_line()+facet_wrap(~Side) #by qqplot
+group_by(RCC2,Side) %>% summarise(shapiro=shapiro.test(ANXA)$p.value) #by shapiro
+#not normal
+#non-parametric * 2 groups --> Wilcoxon (Mann Whitney U)
+wilcox.test(RCC2$ANXA ~ RCC2$Side)
+#ANSWER=REJECT
+
+##3.Individuals with RCC grade II have different levels of E2F3 than those with grade III or IV
+#check normality
+ggplot(RCC2,aes(sample=E2F3)) + geom_qq() + geom_qq_line()+facet_wrap(~Grade)#by qqplot
+group_by(RCC2,Grade) %>% summarise(shapiro=shapiro.test(E2F3)$p.value) #by shapiro
+#3 groups normal
+#parametric * > 2 groups --> ANOVA
+E2F3grade <- aov(RCC2$E2F3 ~ RCC2$Grade)
+summary(E2F3grade)
+#there is a difference but between which groups? --> post Hoc
+TukeyHSD(E2F3grade)
+#ANSWER= ACCEPT
+
+##4.The mean value of miR499 decreases significantly after treatment
+#check normality
+#by qqplot
+ggplot(RCC2,aes(sample=mir499.pre.ttt)) + geom_qq() + geom_qq_line()
+ggplot(RCC2,aes(sample=mir499.post.ttt)) + geom_qq() + geom_qq_line()
+#by shapiro
+shapiro.test(RCC2$mir499.pre.ttt)
+shapiro.test(RCC$mir499.post.ttt)
+#not normal
+#non-parametric * 2 paired groups --> Wilcoxon signed rank test
+wilcox.test(RCC2$mir499.pre.ttt, RCC2$mir499.post.ttt, paired = TRUE)
+#means differ, but does it decrease after ttt? 
+#check means of both to see which is higher
+mean(RCC2$mir499.pre.ttt)
+mean(RCC2$mir499.post.ttt)
+#it increases after ttt
+#ANSWER = REJECT	
+
+##5.DFFA is higher in patients with grade IV tumors 
+#check normality
+ggplot(RCC2,aes(sample=DFFA)) + geom_qq() + geom_qq_line()+facet_wrap(~Grade)#by qqplot
+group_by(RCC2,Grade) %>% summarise(shapiro=shapiro.test(DFFA)$p.value) #by shapiro
+#not normal
+#non-parametric * > 2 groups --> kruskal Wallis
+kruskal.test(RCC2$DFFA ~ RCC2$Grade)
+#ANSWER= REJECT
+
+```
 
