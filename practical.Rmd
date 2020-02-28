@@ -23,7 +23,7 @@ Some of these materials are based on previous courses at Cancer Research Uk Camb
 
 # Part I - Contingency tables
 
-When working with categorical variables, we are usually interested in the frequencies of the different categories in our sample. To display data for two or more categorical variables, cross-tabulations, or contingency tables, are commonly used - with 2 x 2 tables being the simplest. We can then test whether there is anassociation between the row factor and the column factor by a *chi-squared test* or a *Fisher’s exact test*.
+When working with categorical variables, we are usually interested in the frequencies of the different categories in our sample. To display data for two or more categorical variables, cross-tabulations, or contingency tables, are commonly used - with 2 x 2 tables being the simplest. We can then test whether there is an association between the row factor and the column factor by a *chi-squared test* or a *Fisher’s exact test*.
 
 To demonstrate the analysis of contingency tables we will use a dataset provided with the `vcd` package. You will need to install this package using the R command
 
@@ -44,7 +44,7 @@ library(vcd)
 head(Arthritis)
 ```
 
-In base R, we can extract a column from a table using the `$` notation
+In base R, we can extract a column from a table using the `$` notation. With tab-completion the column can be selected without introducing and typos. The `table` function can then be used directly to give tabulation.
 
 ```{r message=FALSE}
 library(tidyverse)
@@ -53,7 +53,7 @@ t1 <- table(Arthritis$Sex)
 t1
 ```
 
-We can visualise these counts as a *barplot*
+We can quickly visualise these counts as a *barplot*. A pie chart is possible, but not generally recommended.
 
 ```{r}
 barplot(t1)
@@ -64,10 +64,12 @@ Further manipulation of this table will give proportions (which will ultimately 
 
 ```{r}
 #to get proportion of males and females
-#to get proportion of males and females
+
 prop.table(t1)
 prop.table(t1)*100  #to make it a percentage
 ```
+
+The `table` function can also compare two columns from a data frame if both columns are given as arguments.
 
 ```{r}
 ##two way table (cross tab)
@@ -75,11 +77,23 @@ t2 <- table (Arthritis$Sex, Arthritis$Improved) #swap variables to switch row an
 t2
 ```
 
+These can also be plotted 
+
+```{r}
+plot(t2)
+barplot(t2)
+barplot(t2, beside=TRUE)
+```
+
+The `prop.table` function can also be applied to these tables. By default the calculated proportions will be a proportion of the total number of observations.
+
 ```{r}
 #proportion & percentage
 prop.table(t2)          #proportion from the total
 prop.table(t2)*100      #percentage from the total
 ```
+
+An extra argument can also be supplied to allow the proportions to be expressed as a proportion of the first or second variable.
 
 ```{r}
 prop.table(t2,1)       #proportion from the first variable
@@ -92,6 +106,8 @@ prop.table(t2,2)*100    #percentage from the second variable
 
 ```
 
+We can add these sums to our table using the `addmargins` function.
+
 ```{r}
 #sum
 addmargins(t2)          #both sums shown 
@@ -100,6 +116,8 @@ addmargins(t2,2)        #sum of second variable
 
 ```
 
+A three-way table is also possible
+
 ```{r}
 ##three-way contingency table
 t3 <- table (Arthritis$Sex, Arthritis$Improved, Arthritis$Treatment)
@@ -107,14 +125,15 @@ t3
 
 ```
 
+A slightly more convenient output can be obtained using the `ftable` function
+
 ```{r}
 #we can also put them all in a multi-dimensional table
 t4 <- ftable(Arthritis$Sex, Arthritis$Improved, Arthritis$Treatment)
 t4
 ```
 
-
-The function `chisq.test` can be used to assess whether differences in proportions are significant or not. We actually don't need to calculate the proportions; R will do this for us.
+Having explored our data, we can now perform statistical testing. The function `chisq.test` can be used to assess whether differences in proportions are significant or not. We actually don't need to calculate the proportions; R will do this for us.
 
 
 ```{r}
@@ -122,6 +141,8 @@ chiTable <- table(Arthritis$Improved, Arthritis$Treatment)
 chisq.test(chiTable)
 
 ```
+
+However, the `chisq.test` function is not appropriate in all circumstances.
 
 ```{r}
 t2
@@ -144,6 +165,8 @@ fisher.test(t2, alternative = "one-sided", conf.level = 0.99)
 
 ```
 
+Although not covered in the lectures, the `mantelhaen.test` function can be used to assess significance for a three-way table.
+
 ```{r}
 ##3 variables
 t3
@@ -151,14 +174,21 @@ mantelhaen.test(t3)
 ```
 
 
+
 <div class="alert alert-warning">
+
 **Exercise**
 
-1- Read the excel file called ‘EX Biostat P1’ into R 
+1- Read the excel file called `Ex Biostat P1.xlsx` into R (see below for the required code)
+
 2- Make a cross table showing the gender in the rows and tumor grade in the columns
+
 3- Define the percentage of Grade III tumors within females 
+
 4- Add a column in the table showing the sum of the 3 grades in males and in females and state the total number of males and females in the sample 
+
 5- Use the appropriate test to check if the tumor grade depends on the gender 
+
 ```{r eval=FALSE}
 tab <- readxl::read_xlsx("data/EX Biostat P1.xlsx")
 ```
@@ -214,8 +244,16 @@ However, this doesn't work. If you check the y-axis limits on the histogram and 
 ggplot(df1, aes(x=x)) + geom_histogram(aes(y=..density..)) + geom_density()
 ```
 
+Although we generally recommend `ggplot2`, the "base" `hist` function sometimes does a better job of choosing the bin widths for the histogram. It is worth looking at the base plot if the `ggplot` doesn't look particularly convincing.
 
-A box plot is an excellent way of displaying continuous data when you are interested in the spread of your data. The box of the box plot corresponds to the lower and upper quartiles of the respective observations and the bar within the box, the median. The whiskers of the box plot correspond to the distance betweenthe lower/upper quartile and thesmallerof: the smaller/largest measurement OR 1.5 times the inter quartile range. A disadvantage of the box plot is that you don’t see the exact data points. However, box plots are very useful in large datasets where plotting all of the data may give an unclear picture of the shape of your data.
+```{r}
+hist(df1$x,freq =FALSE)
+lines(density(df1$x),col="blue")
+```
+
+
+
+A box plot is an excellent way of displaying continuous data when you are interested in the spread of your data. The box of the box plot corresponds to the lower and upper quartiles of the respective observations and the bar within the box, the median. The whiskers of the box plot correspond to the distance betweenthe lower/upper quartile and the smaller of: the smaller/largest measurement *OR* 1.5 times the inter quartile range. A disadvantage of the box plot is that you don’t see the exact data points. However, box plots are very useful in large datasets where plotting all of the data may give an unclear picture of the shape of your data.
 
 ```{r}
 ggplot(df1, aes(x="",y=x)) + geom_boxplot()
@@ -225,6 +263,12 @@ A *violin plot* is sometimes used in conjunction with the boxplot to show densit
 
 ```{r}
 ggplot(df1, aes(x="",y=x))  + geom_violin() + geom_boxplot()
+```
+
+Individual points can also be added with `geom_jitter`; avoiding over-plotting by adding random noise along the x-axis.
+
+```{r}
+ggplot(df1, aes(x="",y=x))  + geom_violin() + geom_boxplot() + geom_jitter(width=0.1)
 ```
 
 
@@ -237,9 +281,6 @@ ggplot(df1,aes(sample=x)) + geom_qq() + geom_qq_line(col="red")
 These graphical methods are by far the easiest way to assess if a given dataset is normally-distributed.
 
 For "real-life" data, the results are unlikely to give a perfect plot, so some degree of judgement and prior experience with the data type are required.  Indeed, it should be noted that the dataset visualised in the above plots was sampled from a normal distribution. Even then, the plots were not 100% convincing!
-
-
-In fact, these data were simulated from a normal distribution. Now lets read some more realistic data
 
 ## Tests for normality
 
@@ -274,13 +315,10 @@ summarise(df1, Mean = mean(x),
           SD = sd(x))
 ```
 
-The `psych` package provides a convenient function `describe` for generating these statistics, and more
-
-
 <div class="alert alert-warning">
 **Exercise**
 
-1- Read the excel file called ‘EX Biostat P2’ into R 
+1- Read the excel file called `Ex Biostat P1.xlsx` into R 
 2- Identify if the age and hospitalization days are normally distributed
 3- Use the appropriate descriptive statistics [mean±SD or median (IQ range)] for each variable
 
@@ -314,7 +352,7 @@ $BMI = weight  / height^2$
     + you might want to do this in multiple steps using the `%>%` notation
 </div>
 
-```{r echo=FALSE,eval=FALSE}
+```{r echo=FALSE}
 diet <- mutate(diet,BMI = initial.weight / (height/100)^2)
 
 ```
@@ -328,20 +366,24 @@ ggplot(diet, aes(x = BMI)) + geom_histogram()
 
 The one-sample t-test is implemented in the function `t.test`. The only input we need to specify is a *vector* of numeric values and it will perform a statistical test. For simplicity, we can use the `$` notation in R to extract the column. This will provide us with a *t* test statistic and a p-value. **However, it is up to us to interpret the p-value**.
 
-```{r eval=FALSE}
+```{r}
 t.test(diet$BMI)
 ```
 
 We get a significant result! However, if we look at the description for `t.test` it is testing against a population mean of $0$. No wonder that we get a significant result. By changing the `mu` argument we perform the desired test.
 
-```{r eval=FALSE}
+```{r}
 t.test(diet$BMI, mu=25,alternative = "greater")
 ```
 
 
 ##  Two-sample tests
 
-A two-sample t-test should be used if you want to compare the measurements of two populations. There are two types of two-sample t-test:independent (unpaired) and paired (dependent). To make the correct choice, you need to understand your underlying data. An independent two-sample t-test is used when the two samples are independent of each other, e.g. *comparing the mean response of two groups of patients on treatment vs. control in a clinical trial*. As the name suggests,a paired two-sample t-test is used when the two samples are paired, e.g. *comparing the mean blood pressure of patients before and after treatment* (two measurements per patient).
+A two-sample t-test should be used if you want to compare the measurements of two populations. There are two types of two-sample t-test:independent (unpaired) and paired (dependent). To make the correct choice, you need to understand your underlying data. 
+
+An independent two-sample t-test is used when the two samples are independent of each other, e.g. *comparing the mean response of two groups of patients on treatment vs. control in a clinical trial*. 
+
+As the name suggests,a paired two-sample t-test is used when the two samples are paired, e.g. *comparing the mean blood pressure of patients before and after treatment* (two measurements per patient).
 
 We might wonder if there is actually any effect due to diet. To perform this test we can compare two columns from the `diet` data frame directly using the `$` notation.
 
@@ -514,11 +556,11 @@ TukeyHSD(anova)
 
 The excel file ‘RCC2’ contains data about the expression levels of some genes in patients with renal cell carcinoma. In your study, you put the following hypotheses.
 Please test those alternative hypotheses and state whether you will accept or reject each one.
+
 1.	Females have a higher level of E2F3 than males 
 2.	ANXA expression levels vary between unilateral and bilateral tumors
-4.	Individuals with RCC grade II have different levels of E2F3 than those with grade III or IV 
-5.	The mean value of miR499 decreases significantly after treatment
-6.	DFFA is higher in patients with grade IV tumors
+3.	Individuals with RCC grade II have different levels of E2F3 than those with grade III or IV 4.	The mean value of miR499 decreases significantly after treatment
+5.	DFFA is higher in patients with grade IV tumors
 </div>
 
 # Solutions
@@ -529,7 +571,7 @@ Please test those alternative hypotheses and state whether you will accept or re
 
 ```{r eval=FALSE, echo=FALSE}
 ##1-Read the excel file called 'EX Biostat P1' into R 
-Biostat1 <- read.table(file = "clipboard",header=TRUE,sep="\t")
+Biostat1 <- readxl::readxl(file = "clipboard",header=TRUE,sep="\t")
 
 ##2-Make a cross table showing the gender in the rows and tumor grade in the columns
 GenderGrade <- table(Biostat1$Gender, Biostat1$Tumor.grade)
@@ -550,35 +592,47 @@ chisq.test(GenderGrade) #grade depends on gender (significant)
 
 ```{r eval=FALSE, echo=FALSE}
 ##1-Read the excel file called 'EX Biostat P2' into R 
-Biostat2 <- read.table(file="clipboard",header = T,sep="\t")
+Biostat2 <- readxl::read_xlsx("data/EX Biostat P2.xlsx")
+
+hist(Biostat2$Age,freq = FALSE)
+lines(density(Biostat2$Age))
 
 ##2-Identify if the age and hospitalization days are normally distributed
 library(ggplot2)
-ggplot(Biostat2, aes(x=Age)) + geom_histogram(aes(y=..density..)) + geom_density()
+ggplot(Biostat2, aes(x=Age)) + geom_histogram(aes(y=..density..,),binwidth = 2) + geom_density()
 ggplot(Biostat2, aes(x="",y=Age))  + geom_violin() + geom_boxplot()
 ggplot(Biostat2,aes(sample=Age)) + geom_qq() + geom_qq_line()
 shapiro.test(Biostat2$Age)
 # Age normally distributed
 
-ggplot(Biostat2, aes(x=hospitalization.days)) + geom_histogram(aes(y=..density..)) + geom_density()
-ggplot(Biostat2, aes(x="",y=hospitalization.days))  + geom_violin() + geom_boxplot()
-ggplot(Biostat2,aes(sample=hospitalization.days)) + geom_qq() + geom_qq_line()
-shapiro.test(Biostat2$hospitalization.days)
+ggplot(Biostat2, aes(x=`hospitalization days`)) + geom_histogram(aes(y=..density..)) + geom_density()
+ggplot(Biostat2, aes(x="",y=`hospitalization days`))  + geom_violin() + geom_boxplot()
+ggplot(Biostat2,aes(sample=`hospitalization days`)) + geom_qq() + geom_qq_line()
+shapiro.test(Biostat2$`hospitalization days`
 # hospitalization days NOT normally distributed
 
 ##3-Use the appropriate descriptive statistics [mean?SD or median (IQ range)] for each variable
 library(tidyverse)
 summarise(Biostat2, MeanAge = mean(Age), sdAge = sd(Age), 
-          medianHospDays=median(hospitalization.days), 
-          Q1=quantile(hospitalization.days, 0.25), 
-          Q3=quantile(hospitalization.days, 0.75))
+          medianHospDays=median(`hospitalization days`), 
+          Q1=quantile(`hospitalization days`, 0.25), 
+          Q3=quantile(`hospitalization days`, 0.75))
 #Age: 9.54 ?2.89 [mean?SD]  & Hospitalization days: 11.5 (9.00 - 14.25) [median(IQ range)]
+```
+```{r}
+png("base_plot.png")
+h <- hist(Biostat2$Age,freq = FALSE)
+lines(density(Biostat2$Age))
+names(h)
+h$counts
+
+?geom_histogram
 ```
 
 ## Part 3
 
 ```{r eval=FALSE, echo=FALSE}
-RCC2 <- read.table(file = "clipboard",header=TRUE,sep="\t")
+RCC2 <- readxl::read_xlsx("data/RCC2.xlsx")
 
 library(ggplot2)
 library(tidyverse)
