@@ -319,8 +319,10 @@ summarise(df1, Mean = mean(x),
 **Exercise**
 
 1- Read the excel file called `Ex Biostat P1.xlsx` into R 
+
 2- Identify if the age and hospitalization days are normally distributed
-3- Use the appropriate descriptive statistics [mean±SD or median (IQ range)] for each variable
+
+3- Use the appropriate descriptive statistics [mean and SD,  or median and IQR] for each variable
 
 </div>
 
@@ -477,7 +479,7 @@ t.test(weight.loss ~ diet.type,data=diet)
 
 In other words, the t-test is only applicable for comparing two groups and we have three diets that we want to compare.
 
-## Compare between MORE THAN TWO GROUPS 
+## Compare between *more than two* groups
 
 #### Parametric (ANOVA)
 
@@ -551,6 +553,29 @@ TukeyHSD(anova)
 
 ```
 
+## Repeated Measures
+
+We will read a modified version of the diet dataset in order to test a "repeated measures" analysis. Here we have added a midpoint weight measurement.
+
+```{r}
+diet2 <- read_csv("data/diet2.csv")
+View(diet2)
+```
+
+However, the three measures that we want to compare are given as columns in the data frame. We cannot express this using the R `~` notation. In other words the data is in *wide* format and not *long*. We can change this using the `reshape2` package. This creates a variable for the type of measurement (initial / mid / final) and a value.
+
+```{r}
+diet_melt <- diet2 %>% select(contains("weight")) %>% 
+  reshape2::melt()
+```
+
+```{r}
+summary(aov(value~variable,data=diet_melt))
+```
+
+
+
+
 <div class="alert alert-warning">
 **Exercise**
 
@@ -619,15 +644,8 @@ summarise(Biostat2, MeanAge = mean(Age), sdAge = sd(Age),
           Q3=quantile(`hospitalization days`, 0.75))
 #Age: 9.54 ?2.89 [mean?SD]  & Hospitalization days: 11.5 (9.00 - 14.25) [median(IQ range)]
 ```
-```{r}
-png("base_plot.png")
-h <- hist(Biostat2$Age,freq = FALSE)
-lines(density(Biostat2$Age))
-names(h)
-h$counts
 
-?geom_histogram
-```
+
 
 ## Part 3
 
