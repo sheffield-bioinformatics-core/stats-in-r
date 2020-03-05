@@ -584,7 +584,8 @@ Please test those alternative hypotheses and state whether you will accept or re
 
 1.	Females have a higher level of E2F3 than males 
 2.	ANXA expression levels vary between unilateral and bilateral tumors
-3.	Individuals with RCC grade II have different levels of E2F3 than those with grade III or IV 4.	The mean value of miR499 decreases significantly after treatment
+3.	Individuals with RCC grade II have different levels of E2F3 than those with grade III or IV 
+4.	The mean value of miR499 decreases significantly after treatment
 5.	DFFA is higher in patients with grade IV tumors
 </div>
 
