@@ -318,7 +318,7 @@ summarise(df1, Mean = mean(x),
 <div class="alert alert-warning">
 **Exercise**
 
-1- Read the excel file called `Ex Biostat P1.xlsx` into R 
+1- Read the excel file called `Ex Biostat P2.xlsx` into R 
 
 2- Identify if the age and hospitalization days are normally distributed
 
