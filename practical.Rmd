@@ -616,7 +616,7 @@ chisq.test(GenderGrade) #grade depends on gender (significant)
 
 ## Part 2
 
-```{r eval=FALSE, echo=FALSE}
+```{r eval=FALSE, echo=TRUE}
 ##1-Read the excel file called 'EX Biostat P2' into R 
 Biostat2 <- readxl::read_xlsx("data/EX Biostat P2.xlsx")
 
@@ -637,13 +637,13 @@ ggplot(Biostat2,aes(sample=`hospitalization days`)) + geom_qq() + geom_qq_line()
 shapiro.test(Biostat2$`hospitalization days`
 # hospitalization days NOT normally distributed
 
-##3-Use the appropriate descriptive statistics [mean?SD or median (IQ range)] for each variable
+##3-Use the appropriate descriptive statistics [mean+-SD or median (IQ range)] for each variable
 library(tidyverse)
 summarise(Biostat2, MeanAge = mean(Age), sdAge = sd(Age), 
           medianHospDays=median(`hospitalization days`), 
           Q1=quantile(`hospitalization days`, 0.25), 
           Q3=quantile(`hospitalization days`, 0.75))
-#Age: 9.54 ?2.89 [mean?SD]  & Hospitalization days: 11.5 (9.00 - 14.25) [median(IQ range)]
+#Age: 9.54 +/- 2.89 [mean +- SD]  & Hospitalization days: 11.5 (9.00 - 14.25) [median(IQ range)]
 ```
 
 
