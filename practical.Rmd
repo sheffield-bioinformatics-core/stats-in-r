@@ -646,11 +646,53 @@ summarise(Biostat2, MeanAge = mean(Age), sdAge = sd(Age),
 #Age: 9.54 +/- 2.89 [mean +- SD]  & Hospitalization days: 11.5 (9.00 - 14.25) [median(IQ range)]
 ```
 
+```{r}
+RCC <- readxl::read_xlsx("data/RCC2.xlsx")
+RCC
+```
+
+```{r}
+ggplot(RCC, aes(x = gender, y = E2F3)) + geom_violin() + geom_boxplot()
+```
+
+```{r}
+t.test(E2F3~gender, data=RCC,var.equal=TRUE)
+```
+
+```{r}
+ggplot(RCC, aes(x = Side, y = ANXA)) + geom_violin() + geom_boxplot()
+wilcox.test(ANXA ~ Side, data = RCC)
+```
+
+```{r}
+ggplot(RCC, aes(x = Grade, y = E2F3)) + geom_violin() + geom_boxplot()
+```
+
+```{r}
+summary(aov(E2F3 ~ Grade,data=RCC))
+TukeyHSD(aov(E2F3 ~ Grade,data=RCC))
+```
+
+
+```{r}
+RCC <- RCC %>% mutate(mirDiff = `mir499 post-ttt`-`mir499 pre-ttt`)
+
+ggplot(RCC, aes(x="",y=mirDiff)) + geom_boxplot()
+wilcox.test(RCC$`mir499 post-ttt`,RCC$`mir499 pre-ttt`,paired=TRUE,alternative = "greater")
+```
+
+```{r}
+ggplot(RCC,aes(x = Grade,y = DFFA)) + geom_violin()+geom_boxplot()
+```
+
+```{r}
+kruskal.test(DFFA~as.factor(Grade),data=RCC)
+```
 
 
 ## Part 3
 
-```{r eval=FALSE, echo=FALSE}
+```{r eval=FALSE, echo=TRUE}
 RCC2 <- readxl::read_xlsx("data/RCC2.xlsx")
 
 library(ggplot2)
@@ -667,7 +709,7 @@ t.test(RCC2$E2F3 ~ RCC2$gender)
 
 ##2.ANXA expression levels vary between unilateral and bilateral tumors 
 #check normality
-ggplot(RCC2,aes(sample=ANXA)) + geom_qq() + geom_qq_line()+facet_wrap(~Side) #by qqplot
+ggplot(RCC,aes(sample=ANXA)) + geom_qq() + geom_qq_line()+facet_wrap(~Side) #by qqplot
 group_by(RCC2,Side) %>% summarise(shapiro=shapiro.test(ANXA)$p.value) #by shapiro
 #not normal
 #non-parametric * 2 groups --> Wilcoxon (Mann Whitney U)
@@ -713,5 +755,9 @@ group_by(RCC2,Grade) %>% summarise(shapiro=shapiro.test(DFFA)$p.value) #by shapi
 kruskal.test(RCC2$DFFA ~ RCC2$Grade)
 #ANSWER= REJECT
 
+```
+
+```{r}
+ggplot(RCC,aes(x="",y=`mir499 pre-ttt`)) + geom_boxplot()
 ```
 
