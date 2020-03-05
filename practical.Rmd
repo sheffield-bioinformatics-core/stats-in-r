@@ -595,7 +595,7 @@ Please test those alternative hypotheses and state whether you will accept or re
 
 ## Part 1
 
-```{r eval=FALSE, echo=FALSE}
+```{r eval=FALSE, echo=TRUE}
 ##1-Read the excel file called 'EX Biostat P1' into R 
 Biostat1 <- readxl::readxl(file = "clipboard",header=TRUE,sep="\t")
 
