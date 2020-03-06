@@ -1,6 +1,6 @@
 ---
 title: "Statistical Analysis of Biological Data"
-author: "Mark Dunning"
+author: "Mark Dunning and Aya Elwazir"
 date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
 output: 
   html_notebook: 
@@ -646,49 +646,6 @@ summarise(Biostat2, MeanAge = mean(Age), sdAge = sd(Age),
 #Age: 9.54 +/- 2.89 [mean +- SD]  & Hospitalization days: 11.5 (9.00 - 14.25) [median(IQ range)]
 ```
 
-```{r}
-RCC <- readxl::read_xlsx("data/RCC2.xlsx")
-RCC
-```
-
-```{r}
-ggplot(RCC, aes(x = gender, y = E2F3)) + geom_violin() + geom_boxplot()
-```
-
-```{r}
-t.test(E2F3~gender, data=RCC,var.equal=TRUE)
-```
-
-```{r}
-ggplot(RCC, aes(x = Side, y = ANXA)) + geom_violin() + geom_boxplot()
-wilcox.test(ANXA ~ Side, data = RCC)
-```
-
-```{r}
-ggplot(RCC, aes(x = Grade, y = E2F3)) + geom_violin() + geom_boxplot()
-```
-
-```{r}
-summary(aov(E2F3 ~ Grade,data=RCC))
-TukeyHSD(aov(E2F3 ~ Grade,data=RCC))
-```
-
-
-```{r}
-RCC <- RCC %>% mutate(mirDiff = `mir499 post-ttt`-`mir499 pre-ttt`)
-
-ggplot(RCC, aes(x="",y=mirDiff)) + geom_boxplot()
-wilcox.test(RCC$`mir499 post-ttt`,RCC$`mir499 pre-ttt`,paired=TRUE,alternative = "greater")
-```
-
-```{r}
-ggplot(RCC,aes(x = Grade,y = DFFA)) + geom_violin()+geom_boxplot()
-```
-
-```{r}
-kruskal.test(DFFA~as.factor(Grade),data=RCC)
-```
-
 
 ## Part 3
 
@@ -709,7 +666,7 @@ t.test(RCC2$E2F3 ~ RCC2$gender)
 
 ##2.ANXA expression levels vary between unilateral and bilateral tumors 
 #check normality
-ggplot(RCC,aes(sample=ANXA)) + geom_qq() + geom_qq_line()+facet_wrap(~Side) #by qqplot
+ggplot(RCC2,aes(sample=ANXA)) + geom_qq() + geom_qq_line()+facet_wrap(~Side) #by qqplot
 group_by(RCC2,Side) %>% summarise(shapiro=shapiro.test(ANXA)$p.value) #by shapiro
 #not normal
 #non-parametric * 2 groups --> Wilcoxon (Mann Whitney U)
@@ -727,22 +684,25 @@ summary(E2F3grade)
 #there is a difference but between which groups? --> post Hoc
 TukeyHSD(E2F3grade)
 #ANSWER= ACCEPT
+###The oneway test is also an alternative for when the variances are not the same
+oneway.test(RCC2$E2F3 ~ RCC2$Grade)
+
 
 ##4.The mean value of miR499 decreases significantly after treatment
 #check normality
 #by qqplot
-ggplot(RCC2,aes(sample=mir499.pre.ttt)) + geom_qq() + geom_qq_line()
-ggplot(RCC2,aes(sample=mir499.post.ttt)) + geom_qq() + geom_qq_line()
+ggplot(RCC2,aes(sample=`mir499 pre-ttt`)) + geom_qq() + geom_qq_line()
+ggplot(RCC2,aes(sample=`mir499 post-ttt`)) + geom_qq() + geom_qq_line()
 #by shapiro
-shapiro.test(RCC2$mir499.pre.ttt)
-shapiro.test(RCC$mir499.post.ttt)
+shapiro.test(RCC2$`mir499 pre-ttt`)
+shapiro.test(RCC2$`mir499 post-ttt`)
 #not normal
 #non-parametric * 2 paired groups --> Wilcoxon signed rank test
-wilcox.test(RCC2$mir499.pre.ttt, RCC2$mir499.post.ttt, paired = TRUE)
+wilcox.test(RCC2$`mir499 pre-ttt`, RCC2$`mir499 post-ttt`, paired = TRUE)
 #means differ, but does it decrease after ttt? 
 #check means of both to see which is higher
-mean(RCC2$mir499.pre.ttt)
-mean(RCC2$mir499.post.ttt)
+mean(RCC2$`mir499 pre-ttt`)
+mean(RCC2$`mir499 post-ttt`)
 #it increases after ttt
 #ANSWER = REJECT	
 
@@ -757,7 +717,4 @@ kruskal.test(RCC2$DFFA ~ RCC2$Grade)
 
 ```
 
-```{r}
-ggplot(RCC,aes(x="",y=`mir499 pre-ttt`)) + geom_boxplot()
-```
 
