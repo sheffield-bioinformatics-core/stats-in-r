@@ -47,6 +47,7 @@ head(Arthritis)
 In base R, we can extract a column from a table using the `$` notation. With tab-completion the column can be selected without introducing and typos. The `table` function can then be used directly to give tabulation.
 
 ```{r message=FALSE}
+
 ##one way table (count of one variable)
 t1 <- table(Arthritis$Sex)
 t1
@@ -179,7 +180,6 @@ mantelhaen.test(t3)
 **Exercise**
 
 1- Read the excel file called `Ex Biostat P1.xlsx` into R (see below for the required code)
-    + you will need the `readxl` package for this; `install.packages("readxl")`
 
 2- Make a cross table showing the gender in the rows and tumor grade in the columns
 
@@ -204,7 +204,7 @@ We will read some example data to illustrate how one would test for a normally-d
 
 One of the best ways of displaying data is by using a graph. Graphs can make both simple and complex data easier to understand by making it easier to spot trends and patterns. We can use plots to view the distribution of our data (minimum, maximum, mid-point, spread etc) and to ensure that the values in our dataset seem realistic (e.g. no outliers). Many statistical tests rely on the assumption that the data are normally distributed.
 
-First we will load the `tidyverse` set of packages that are recommended for data manipulation and visualisation. The data for this first section are to be found in the file `normal_example.csv` in the `data` folder. You will need to specify the file path accordingly.
+The data for this section are to be found in the file `normal_example.csv` in the `data` folder. You will need to specify the file path accordingly.
 
 ```{r message=FALSE}
 library(readr)
@@ -525,7 +525,6 @@ kruskal.test(weight.loss ~ as.factor(diet.type), data=diet)
 Like the one-way ANOVA this will only tell us that at least one group is different and not specifically which group(s). The post-hoc `dunn.test` is recommended which also performs multiple testing correction.
 
 ```{r}
-install.packages("dunn.test")
 library(dunn.test)
 dunn.test(diet$weight.loss,diet$diet.type,method = "Bonferroni")
 ```
@@ -561,7 +560,6 @@ TukeyHSD(anova)
 We will read a modified version of the diet dataset in order to test a "repeated measures" analysis. Here we have added a midpoint weight measurement.
 
 ```{r}
-library(readr)
 diet2 <- read_csv("data/diet2.csv")
 View(diet2)
 ```
