@@ -47,7 +47,6 @@ head(Arthritis)
 In base R, we can extract a column from a table using the `$` notation. With tab-completion the column can be selected without introducing and typos. The `table` function can then be used directly to give tabulation.
 
 ```{r message=FALSE}
-library(tidyverse)
 ##one way table (count of one variable)
 t1 <- table(Arthritis$Sex)
 t1
@@ -180,6 +179,7 @@ mantelhaen.test(t3)
 **Exercise**
 
 1- Read the excel file called `Ex Biostat P1.xlsx` into R (see below for the required code)
+    + you will need the `readxl` package for this; `install.packages("readxl")`
 
 2- Make a cross table showing the gender in the rows and tumor grade in the columns
 
@@ -207,7 +207,7 @@ One of the best ways of displaying data is by using a graph. Graphs can make bot
 First we will load the `tidyverse` set of packages that are recommended for data manipulation and visualisation. The data for this first section are to be found in the file `normal_example.csv` in the `data` folder. You will need to specify the file path accordingly.
 
 ```{r message=FALSE}
-library(tidyverse)
+library(readr)
 df1 <- read_csv("data/normal_example.csv")
 ```
 
@@ -220,6 +220,7 @@ View(df1)
 Various graphical methods are available to assess the distrbution. The first of which is a *histogram*. Here, the data are split into "bins" (`ggplot2` choses the number of bins) and the value on the `y` axis corresponds to the number of observations in that bin. The user only has to specify the variable to be plotted, and `ggplot2` takes care of the binning. From this plot we can judge what the average value of the data is and the spread.
 
 ```{r}
+library(ggplot2)
 ggplot(df1, aes(x=x)) + geom_histogram()
 ```
 
@@ -307,9 +308,10 @@ ks.test(df1$x,"pnorm", mean=mean(df1$x), sd=sd(df1$x))
 
 ## Descriptive Statistics
 
-In the [accompanying R course](http://sbc.shef.ac.uk/r-crash-course/) we have seen how to produce summary statistics of columns in a dataset. For a dataset that is normally-distributed, appropriate measures of the average and variability are the *mean* and *standard deviation*. Both these functions are available within R and can be used in conjunction with the `summarise` function in `tidyverse`.
+In the [accompanying R course](http://sbc.shef.ac.uk/r-crash-course/) we have seen how to produce summary statistics of columns in a dataset. For a dataset that is normally-distributed, appropriate measures of the average and variability are the *mean* and *standard deviation*. Both these functions are available within R and can be used in conjunction with the `summarise` function in `dplyr`.
 
 ```{r}
+library(dplyr)
 summarise(df1, Mean = mean(x), 
           Var= var(x),
           SD = sd(x))
@@ -523,6 +525,7 @@ kruskal.test(weight.loss ~ as.factor(diet.type), data=diet)
 Like the one-way ANOVA this will only tell us that at least one group is different and not specifically which group(s). The post-hoc `dunn.test` is recommended which also performs multiple testing correction.
 
 ```{r}
+install.packages("dunn.test")
 library(dunn.test)
 dunn.test(diet$weight.loss,diet$diet.type,method = "Bonferroni")
 ```
@@ -558,6 +561,7 @@ TukeyHSD(anova)
 We will read a modified version of the diet dataset in order to test a "repeated measures" analysis. Here we have added a midpoint weight measurement.
 
 ```{r}
+library(readr)
 diet2 <- read_csv("data/diet2.csv")
 View(diet2)
 ```
