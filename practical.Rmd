@@ -191,6 +191,7 @@ mantelhaen.test(t3)
 
 ```{r eval=FALSE}
 tab <- readxl::read_xlsx("data/EX Biostat P1.xlsx")
+table(tab$Gender,tab$`Tumor grade`)
 ```
 
 </div>
@@ -661,7 +662,7 @@ ggplot(RCC2,aes(sample=E2F3)) + geom_qq() + geom_qq_line() +facet_wrap(~gender) 
 group_by(RCC2,gender) %>% summarise(shapiro=shapiro.test(E2F3)$p.value) #by shapiro
 #both groups normally distributed
 #parametric * 2 groups --> t-test
-t.test(RCC2$E2F3 ~ RCC2$gender) 
+t.test(RCC2$E2F3 ~ RCC2$gender,alternative="greater") 
 #ANSWER=REJECT
 
 ##2.ANXA expression levels vary between unilateral and bilateral tumors 
