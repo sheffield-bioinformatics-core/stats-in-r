@@ -217,7 +217,7 @@ We can inspect the data in RStudio and discover that it consists of a single col
 View(df1)
 ```
 
-Various graphical methods are available to assess the distrbution. The first of which is a *histogram*. Here, the data are split into "bins" (`ggplot2` choses the number of bins) and the value on the `y` axis corresponds to the number of observations in that bin. The user only has to specify the variable to be plotted, and `ggplot2` takes care of the binning. From this plot we can judge what the average value of the data is and the spread.
+Various graphical methods are available to assess the distribution. The first of which is a *histogram*. Here, the data are split into "bins" (`ggplot2` chooses the number of bins) and the value on the `y` axis corresponds to the number of observations in that bin. The user only has to specify the variable to be plotted, and `ggplot2` takes care of the binning. From this plot we can judge what the average value of the data is and the spread.
 
 ```{r}
 library(ggplot2)
@@ -254,7 +254,7 @@ lines(density(df1$x),col="blue")
 
 
 
-A box plot is an excellent way of displaying continuous data when you are interested in the spread of your data. The box of the box plot corresponds to the lower and upper quartiles of the respective observations and the bar within the box, the median. The whiskers of the box plot correspond to the distance betweenthe lower/upper quartile and the smaller of: the smaller/largest measurement *OR* 1.5 times the inter quartile range. A disadvantage of the box plot is that you don’t see the exact data points. However, box plots are very useful in large datasets where plotting all of the data may give an unclear picture of the shape of your data.
+A box plot is an excellent way of displaying continuous data when you are interested in the spread of your data. The box of the box plot corresponds to the lower and upper quartiles of the respective observations and the bar within the box, the median. The whiskers of the box plot correspond to the distance between the lower/upper quartile and the smaller of: the smaller/largest measurement *OR* 1.5 times the inter quartile range. A disadvantage of the box plot is that you don’t see the exact data points. However, box plots are very useful in large datasets where plotting all of the data may give an unclear picture of the shape of your data.
 
 ```{r}
 ggplot(df1, aes(x="",y=x)) + geom_boxplot()
@@ -335,7 +335,7 @@ summarise(df1, Mean = mean(x),
 In this part we will show how to perform tests to compare 1, 2 (or more) continuous variables. The dataset, provided by MASH at The University of Sheffield, describes individuals that have been following different diets and their age and gender. The main goal of interest is to determine which of three competing diet regimes results in the greatest weight loss.
 
 ```{r message=FALSE}
-diet <- read_csv("data/diet.csv")
+diet <- read_csv("data/diet2.csv")
 diet
 ```
 
@@ -357,7 +357,7 @@ $BMI = weight  / height^2$
 </div>
 
 ```{r echo=FALSE}
-diet <- mutate(diet,BMI = initial.weight / (height/100)^2)
+
 
 ```
 
@@ -415,9 +415,9 @@ diet <- mutate(diet, weight.loss = initial.weight - final.weight)
 t.test(diet$weight.loss)
 ```
 
-## The Independant t test.......TWO independant groups 
+## The Independent t test.......TWO independent groups 
 
-Lets consider that we want to compare whether males or females lost more weight during the trial. Here we have two groups and these can be treated as *independant* variables as different patients belong to the two groups.
+Lets consider that we want to compare whether males or females lost more weight during the trial. Here we have two groups and these can be treated as *independent* variables as different patients belong to the two groups.
 
 The *null hypothesis* for such a test would be that the weight loss is the same between groups male and female. We seek to evidence to reject this hypothesis by calculating a test statistic. Firstly, we have to check for normality:-
 
@@ -431,7 +431,7 @@ group_by(diet, gender) %>%
 We conclude that the variances are approximately the same and both variables are normally-distributed
 
 
-We can now use the `t.test` function to perform an *independant* test. The first argument to `t.test` is the *R formula* notation for the test being performed. It allows us to define which columns in our dataset are the numeric and grouping variables in the test.
+We can now use the `t.test` function to perform an *independent* test. The first argument to `t.test` is the *R formula* notation for the test being performed. It allows us to define which columns in our dataset are the numeric and grouping variables in the test.
 
 This function allows various type of test to be performed by changing the appropriate arguments (see the help for `t.test` for details (`?t.test`)). For instance, we can tell the test that we believe our variances are equal or not.
 
@@ -443,11 +443,20 @@ We can see that the t-statistic we observe is consistent with the null hypothesi
 
 *This is not a significant result (p>0.05), so there is no evidence of a difference in weight loss between males and females*
 
+There is no difference in weight loss between males and females. However, the test of interest is whether some diets are more beneficial. If we attempt to test the difference between diets, the following happens:-
+
+```{r eval=FALSE}
+t.test(weight.loss ~ diet.type,data=diet)
+```
+
+In other words, the t-test is only applicable for comparing two groups and we have three diets that we want to compare.
+
+
 ## Non- Parametric alternatives (Wilcoxon test)
 
 Being able to use the `t-test` relies on the your data being normally-distributed. If we do not sufficient confidence in this assumption, there are different statistical tests that can be applied. Rather than calculating and comparing the *means* and *variances* of different groups they are *rank-based* methods. However, they still come with a set of assumptions and involve the generation of test statistics and p-values.
 
-### Independant samples = Wilcoxon rank sum test (Mann Whitney U test)
+### Independent samples = Wilcoxon rank sum test (Mann Whitney U test)
 
 This test has many different names including the Wilcoxon, Wilcoxon two sample test, Wilcoxon-Mann-Whitney, Wilcoxon rank sum and the Mann-Whitney-U test. However, this test should not be confused with the Wilcoxon signed rank test (which is used for paired tests). To avoid confusion this test is usually referred to as the Mann-Whitney U test, which is used when the dependent variable to be examined is continuous but the assumptions for parametric tests are violated.
 
@@ -459,7 +468,7 @@ The assumptions of the Mann-Whitney U are as follows:
 
 3.The dependent variables for the two independent groups share a similar shape.
 
-Fortunately, the R programmers have made the function to do a wilcox test similar to doing a t-test. **The difficulty is in choosing the correct test to apply - which R will not advise you on**.
+Fortunately, the R programmers have made the function to do a Wilcox test similar to doing a t-test. **The difficulty is in choosing the correct test to apply - which R will not advise you on**.
 
 Let's go back to our example of comparing weight loss between groups male and female. The equivalent non-parametric version of the test we performed before is:-
 
@@ -473,13 +482,6 @@ The `wilcox.test` is flexible in much the same way that `t.test` in. We can swit
 wilcox.test(diet$final.weight,diet$initial.weight, paired=TRUE)
 ```
 
-There is no difference in weight loss between males and females. However, the test of interest is whether some diets are more beneficial. If we attempt to test the difference between diets, the following happens:-
-
-```{r eval=FALSE}
-t.test(weight.loss ~ diet.type,data=diet)
-```
-
-In other words, the t-test is only applicable for comparing two groups and we have three diets that we want to compare.
 
 ## Compare between *more than two* groups
 
@@ -557,17 +559,16 @@ TukeyHSD(anova)
 
 ## Repeated Measures
 
-We will read a modified version of the diet dataset in order to test a "repeated measures" analysis. Here we have added a midpoint weight measurement.
+Let's revist our dataset. Here, there is a midpoint weight measurement, so we have repeated measures.
 
 ```{r}
-diet2 <- read_csv("data/diet2.csv")
-View(diet2)
+diet
 ```
 
 However, the three measures that we want to compare are given as columns in the data frame. We cannot express this using the R `~` notation. In other words the data is in *wide* format and not *long*. We can change this using the `reshape2` package. This creates a variable for the type of measurement (initial / mid / final) and a value.
 
 ```{r}
-diet_melt <- diet2 %>% select(contains("weight")) %>% 
+diet_melt <- diet %>% select(initial.weight, final.weight, mid.weight) %>% 
   reshape2::melt()
 ```
 
