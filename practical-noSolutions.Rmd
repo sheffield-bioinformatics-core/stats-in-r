@@ -1,6 +1,6 @@
 ---
 title: "Statistical Analysis of Biological Data"
-author: "Mark Dunning and Aya Elwazir"
+author: "Mark Dunning, Niamh Errington and Aya Elwazir"
 date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
 output: 
   html_notebook: 
