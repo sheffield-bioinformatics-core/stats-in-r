@@ -598,7 +598,7 @@ Please test those alternative hypotheses and state whether you will accept or re
 
 ```{r eval=FALSE, echo=TRUE}
 ##1-Read the excel file called 'EX Biostat P1' into R 
-Biostat1 <- readxl::readxl(file = "clipboard",header=TRUE,sep="\t")
+Biostat1 <- readxl::read_xlsx("data/EX Biostat P1.xlsx")
 
 ##2-Make a cross table showing the gender in the rows and tumor grade in the columns
 GenderGrade <- table(Biostat1$Gender, Biostat1$Tumor.grade)
