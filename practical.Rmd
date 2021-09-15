@@ -1,6 +1,6 @@
 ---
 title: "Statistical Analysis of Biological Data"
-author: "Mark Dunning and Aya Elwazir"
+author: "Mark Dunning, Niamh Errington and Aya Elwazir"
 date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
 output: 
   html_notebook: 
@@ -65,7 +65,7 @@ Further manipulation of this table will give proportions (which will ultimately 
 ```{r}
 #to get proportion of males and females
 
-prop.table(t1)
+write.csv(prop.table(t1), "data/test.csv")
 prop.table(t1)*100  #to make it a percentage
 ```
 
@@ -190,8 +190,9 @@ mantelhaen.test(t3)
 5- Use the appropriate test to check if the tumor grade depends on the gender 
 
 ```{r eval=FALSE}
+install.packages("readxl")
 tab <- readxl::read_xlsx("data/EX Biostat P1.xlsx")
-table(tab$Gender,tab$`Tumor grade`)
+
 ```
 
 </div>
@@ -567,11 +568,11 @@ However, the three measures that we want to compare are given as columns in the 
 
 ```{r}
 diet_melt <- diet2 %>% select(contains("weight")) %>% 
-  tidry::pivot_longer(1:3)
+  tidyr::pivot_longer(1:3)
 ```
 
 ```{r}
-summary(aov(value~variable,data=diet_melt))
+summary(aov(value~name,data=diet_melt))
 ```
 
 
@@ -598,7 +599,7 @@ Please test those alternative hypotheses and state whether you will accept or re
 
 ```{r eval=FALSE, echo=TRUE}
 ##1-Read the excel file called 'EX Biostat P1' into R 
-Biostat1 <- readxl::readxl(file = "clipboard",header=TRUE,sep="\t")
+Biostat1 <- readxl::read_xlsx("data/EX Biostat P1.xlsx")
 
 ##2-Make a cross table showing the gender in the rows and tumor grade in the columns
 GenderGrade <- table(Biostat1$Gender, Biostat1$Tumor.grade)
@@ -662,7 +663,7 @@ ggplot(RCC2,aes(sample=E2F3)) + geom_qq() + geom_qq_line() +facet_wrap(~gender) 
 group_by(RCC2,gender) %>% summarise(shapiro=shapiro.test(E2F3)$p.value) #by shapiro
 #both groups normally distributed
 #parametric * 2 groups --> t-test
-t.test(RCC2$E2F3 ~ RCC2$gender,alternative="greater") 
+t.test(RCC2$E2F3 ~ RCC2$gender) 
 #ANSWER=REJECT
 
 ##2.ANXA expression levels vary between unilateral and bilateral tumors 
