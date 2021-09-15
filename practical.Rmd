@@ -567,7 +567,7 @@ However, the three measures that we want to compare are given as columns in the 
 
 ```{r}
 diet_melt <- diet2 %>% select(contains("weight")) %>% 
-  reshape2::melt()
+  tidry::pivot_longer(1:3)
 ```
 
 ```{r}
