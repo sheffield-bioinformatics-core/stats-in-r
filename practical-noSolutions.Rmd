@@ -44,7 +44,7 @@ library(vcd)
 head(Arthritis)
 ```
 
-In base R, we can extract a column from a table using the `$` notation. With tab-completion the column can be selected without introducing and typos. The `table` function can then be used directly to give tabulation.
+In base R, we can extract a column from a table using the `$` notation. With tab-completion the column can be selected without introducing any typos. The `table` function can then be used directly to give a tabulation of the values in the column.
 
 ```{r message=FALSE}
 
@@ -80,6 +80,7 @@ t2
 These can also be plotted 
 
 ```{r}
+# Use of plotting in base R for convenience
 plot(t2)
 barplot(t2)
 barplot(t2, beside=TRUE)
@@ -150,6 +151,7 @@ chisq.test(t2) #notice the warning message
 
 ```
 
+The Fisher test is recommended for tables with low numbers of observations (e.g. when more than 20% of cells have expected frequencies < 5)
 
 ```{r}
 #Fisher exact
@@ -190,6 +192,9 @@ mantelhaen.test(t3)
 5- Use the appropriate test to check if the tumor grade depends on the gender 
 
 ```{r eval=FALSE}
+## the readxl package is required to read xls and xlsx files into R
+## However, csv and tsv files are recommended to store data
+
 tab <- readxl::read_xlsx("data/EX Biostat P1.xlsx")
 ```
 
@@ -217,7 +222,7 @@ We can inspect the data in RStudio and discover that it consists of a single col
 View(df1)
 ```
 
-Various graphical methods are available to assess the distribution. The first of which is a *histogram*. Here, the data are split into "bins" (`ggplot2` chooses the number of bins) and the value on the `y` axis corresponds to the number of observations in that bin. The user only has to specify the variable to be plotted, and `ggplot2` takes care of the binning. From this plot we can judge what the average value of the data is and the spread.
+Various graphical methods are available to assess the distribution. The first of which is a *histogram*. Here, the data are split into "bins" (`ggplot2` chooses the number of bins) and the value on the `y` axis corresponds to the number of observations in that bin. The user only has to specify the variable to be plotted, and `ggplot2` takes care of the binning. From this plot we can judge what the average value of the data is, and the spread.
 
 ```{r}
 library(ggplot2)
@@ -257,6 +262,7 @@ lines(density(df1$x),col="blue")
 A box plot is an excellent way of displaying continuous data when you are interested in the spread of your data. The box of the box plot corresponds to the lower and upper quartiles of the respective observations and the bar within the box, the median. The whiskers of the box plot correspond to the distance between the lower/upper quartile and the smaller of: the smaller/largest measurement *OR* 1.5 times the inter quartile range. A disadvantage of the box plot is that you don’t see the exact data points. However, box plots are very useful in large datasets where plotting all of the data may give an unclear picture of the shape of your data.
 
 ```{r}
+## setting x to be empty is required to make a boxplot from one variable
 ggplot(df1, aes(x="",y=x)) + geom_boxplot()
 ```
 
@@ -332,7 +338,7 @@ summarise(df1, Mean = mean(x),
 
 # Part III - Significance tests for continuous variables
 
-In this part we will show how to perform tests to compare 1, 2 (or more) continuous variables. The dataset, provided by MASH at The University of Sheffield, describes individuals that have been following different diets and their age and gender. The main goal of interest is to determine which of three competing diet regimes results in the greatest weight loss.
+In this part we will show how to perform tests to compare 1, 2 (or more) continuous variables. The dataset, provided by MASH at The University of Sheffield, describes individuals that have been following different diets and their age and gender. The main goal of interest is to determine which of three competing diet regimes results in the greatest weight loss. However, we can use the dataset to demonstrate other types of test.
 
 ```{r message=FALSE}
 diet <- read_csv("data/diet2.csv")
@@ -374,16 +380,17 @@ The one-sample t-test is implemented in the function `t.test`. The only input we
 t.test(diet$BMI)
 ```
 
-We get a significant result! However, if we look at the description for `t.test` it is testing against a population mean of $0$. No wonder that we get a significant result. By changing the `mu` argument we perform the desired test.
+We get a significant result! However, if we look at the description for `t.test` it is testing against a population mean of $0$. It is no surprise that we get a significant result! By changing the `mu` argument we perform the desired test.
 
 ```{r}
+## 25 is the cutoff for overweight
 t.test(diet$BMI, mu=25,alternative = "greater")
 ```
 
 
 ##  Two-sample tests
 
-A two-sample t-test should be used if you want to compare the measurements of two populations. There are two types of two-sample t-test:independent (unpaired) and paired (dependent). To make the correct choice, you need to understand your underlying data. 
+A two-sample t-test should be used if you want to compare the measurements of two populations. There are two types of two-sample t-test: independent (unpaired) and paired (dependent). To make the correct choice, you need to understand your underlying data. 
 
 An independent two-sample t-test is used when the two samples are independent of each other, e.g. *comparing the mean response of two groups of patients on treatment vs. control in a clinical trial*. 
 
@@ -402,7 +409,7 @@ t.test(diet$final.weight, diet$initial.weight,alternative = "less")
 ```
 
 
-There is also extra information that we could employ; namely that the measurements of weight are made **on the same person** before and after dieting. This is a classic example of when to apply a paired t-test. We do not need to change the code much to perform such a test; only add an argument `paired=TRUE` to `t.test`.
+There is also extra information that we could employ; namely that the measurements of weight are made **on the same person** before and after dieting. This is a classic example of when to apply a paired t-test. Again, we do not need to use a different function to perform the test; only add an argument `paired=TRUE` to `t.test`.
 
 ```{r}
 t.test(diet$final.weight, diet$initial.weight,alternative = "less", paired=TRUE)
@@ -431,7 +438,27 @@ group_by(diet, gender) %>%
 We conclude that the variances are approximately the same and both variables are normally-distributed
 
 
-We can now use the `t.test` function to perform an *independent* test. The first argument to `t.test` is the *R formula* notation for the test being performed. It allows us to define which columns in our dataset are the numeric and grouping variables in the test.
+We can use the `t.test` function to perform an *independent* test, although we need to use the function in a slightly different way. If we recall how we performed the test on initial and final weights, both `final.weight` and `initial.weight` were existing columns in the data
+
+```{r eval=FALSE}
+t.test(diet$final.weight, diet$initial.weight,alternative = "less")
+
+## General usage to compare variables in columns X and Y
+t.test(diet$X, diet$Y)
+
+```
+
+For the test we propose (males vs females) we do not have corresponding columns for male and female weights. Instead, we have a column which tells us the gender of each individual. For cases such as this we can employ the formula s
+
+```{r eval=FALSE}
+## Here, X is a numeric variable and Group contains grouping information
+t.test(diet$X ~ diet$Group)
+## an alternative with less to type
+t.test(X ~ Group, data = diet)
+
+```
+
+
 
 This function allows various type of test to be performed by changing the appropriate arguments (see the help for `t.test` for details (`?t.test`)). For instance, we can tell the test that we believe our variances are equal or not.
 

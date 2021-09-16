@@ -44,7 +44,7 @@ library(vcd)
 head(Arthritis)
 ```
 
-In base R, we can extract a column from a table using the `$` notation. With tab-completion the column can be selected without introducing and typos. The `table` function can then be used directly to give tabulation.
+In base R, we can extract a column from a table using the `$` notation. With tab-completion the column can be selected without introducing any typos. The `table` function can then be used directly to give a tabulation of the values in the column.
 
 ```{r message=FALSE}
 library(tidyverse)
@@ -65,7 +65,6 @@ Further manipulation of this table will give proportions (which will ultimately 
 ```{r}
 #to get proportion of males and females
 
-write.csv(prop.table(t1), "data/test.csv")
 prop.table(t1)*100  #to make it a percentage
 ```
 
@@ -80,6 +79,7 @@ t2
 These can also be plotted 
 
 ```{r}
+# Use of plotting in base R for convenience
 plot(t2)
 barplot(t2)
 barplot(t2, beside=TRUE)
@@ -150,6 +150,7 @@ chisq.test(t2) #notice the warning message
 
 ```
 
+The Fisher test is recommended for tables with low numbers of observations (e.g. when more than 20% of cells have expected frequencies < 5)
 
 ```{r}
 #Fisher exact
@@ -190,6 +191,9 @@ mantelhaen.test(t3)
 5- Use the appropriate test to check if the tumor grade depends on the gender 
 
 ```{r eval=FALSE}
+## the readxl package is required to read xls and xlsx files into R
+## However, csv and tsv files are recommended to store data
+
 install.packages("readxl")
 tab <- readxl::read_xlsx("data/EX Biostat P1.xlsx")
 
@@ -258,6 +262,7 @@ lines(density(df1$x),col="blue")
 A box plot is an excellent way of displaying continuous data when you are interested in the spread of your data. The box of the box plot corresponds to the lower and upper quartiles of the respective observations and the bar within the box, the median. The whiskers of the box plot correspond to the distance betweenthe lower/upper quartile and the smaller of: the smaller/largest measurement *OR* 1.5 times the inter quartile range. A disadvantage of the box plot is that you don’t see the exact data points. However, box plots are very useful in large datasets where plotting all of the data may give an unclear picture of the shape of your data.
 
 ```{r}
+## setting x to be empty is required to make a boxplot from one variable
 ggplot(df1, aes(x="",y=x)) + geom_boxplot()
 ```
 
@@ -332,7 +337,7 @@ summarise(df1, Mean = mean(x),
 
 # Part III - Significance tests for continuous variables
 
-In this part we will show how to perform tests to compare 1, 2 (or more) continuous variables. The dataset, provided by MASH at The University of Sheffield, describes individuals that have been following different diets and their age and gender. The main goal of interest is to determine which of three competing diet regimes results in the greatest weight loss.
+In this part we will show how to perform tests to compare 1, 2 (or more) continuous variables. The dataset, provided by MASH at The University of Sheffield, describes individuals that have been following different diets and their age and gender. The main goal of interest is to determine which of three competing diet regimes results in the greatest weight loss. However, we can use the dataset to demonstrate other types of test.
 
 ```{r message=FALSE}
 diet <- read_csv("data/diet.csv")
@@ -377,13 +382,14 @@ t.test(diet$BMI)
 We get a significant result! However, if we look at the description for `t.test` it is testing against a population mean of $0$. No wonder that we get a significant result. By changing the `mu` argument we perform the desired test.
 
 ```{r}
+## 25 is the cutoff for overweight
 t.test(diet$BMI, mu=25,alternative = "greater")
 ```
 
 
 ##  Two-sample tests
 
-A two-sample t-test should be used if you want to compare the measurements of two populations. There are two types of two-sample t-test:independent (unpaired) and paired (dependent). To make the correct choice, you need to understand your underlying data. 
+A two-sample t-test should be used if you want to compare the measurements of two populations. There are two types of two-sample t-test: independent (unpaired) and paired (dependent). To make the correct choice, you need to understand your underlying data. 
 
 An independent two-sample t-test is used when the two samples are independent of each other, e.g. *comparing the mean response of two groups of patients on treatment vs. control in a clinical trial*. 
 
@@ -402,7 +408,7 @@ t.test(diet$final.weight, diet$initial.weight,alternative = "less")
 ```
 
 
-There is also extra information that we could employ; namely that the measurements of weight are made **on the same person** before and after dieting. This is a classic example of when to apply a paired t-test. We do not need to change the code much to perform such a test; only add an argument `paired=TRUE` to `t.test`.
+There is also extra information that we could employ; namely that the measurements of weight are made **on the same person** before and after dieting. This is a classic example of when to apply a paired t-test. Again, we do not need to use a different function to perform the test; only add an argument `paired=TRUE` to `t.test`.
 
 ```{r}
 t.test(diet$final.weight, diet$initial.weight,alternative = "less", paired=TRUE)
