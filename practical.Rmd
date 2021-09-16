@@ -352,7 +352,8 @@ The first hypothesis we will test is whether the people in the study are overwei
 
 $BMI = weight  / height^2$
 
-*where the weight is measured in kg and the height in metres*
+(*where the weight is measured in kg, and the height in metres*)
+
 
 <div class="alert alert-warning">
 **Exercise**
@@ -379,7 +380,7 @@ The one-sample t-test is implemented in the function `t.test`. The only input we
 t.test(diet$BMI)
 ```
 
-We get a significant result! However, if we look at the description for `t.test` it is testing against a population mean of $0$. No wonder that we get a significant result. By changing the `mu` argument we perform the desired test.
+We get a significant result! However, if we look at the description for `t.test` it is testing against a population mean of $0$. No wonder that we get a significant result. By changing the `mu` argument we perform the desired test. By changing the `mu` argument we can perform a test to see if the people in the study are overweight to begin with (using 25 as the population or known mean).
 
 ```{r}
 ## 25 is the cutoff for overweight
@@ -395,7 +396,7 @@ An independent two-sample t-test is used when the two samples are independent of
 
 As the name suggests,a paired two-sample t-test is used when the two samples are paired, e.g. *comparing the mean blood pressure of patients before and after treatment* (two measurements per patient).
 
-We might wonder if there is actually any effect due to diet. To perform this test we can compare two columns from the `diet` data frame directly using the `$` notation.
+Back to our dataset, we might wonder if there is actually any effect due to diet. To perform this test we can compare two columns from the `diet` data frame directly using the `$` notation.
 
 ```{r}
 t.test(diet$final.weight, diet$initial.weight)
@@ -465,7 +466,7 @@ The assumptions of the Mann-Whitney U are as follows:
 
 3.The dependent variables for the two independent groups share a similar shape.
 
-Fortunately, the R programmers have made the function to do a wilcox test similar to doing a t-test. **The difficulty is in choosing the correct test to apply - which R will not advise you on**.
+Fortunately, the R developers have made the function to do a wilcox test similar to doing a t-test. **The difficulty is in choosing the correct test to apply - which R will not advise you on**.
 
 Let's go back to our example of comparing weight loss between groups male and female. The equivalent non-parametric version of the test we performed before is:-
 
@@ -603,7 +604,7 @@ Please test those alternative hypotheses and state whether you will accept or re
 
 ## Part 1
 
-```{r eval=FALSE, echo=TRUE}
+```{r eval=FALSE, echo=FALSE}
 ##1-Read the excel file called 'EX Biostat P1' into R 
 Biostat1 <- readxl::read_xlsx("data/EX Biostat P1.xlsx")
 
@@ -624,7 +625,7 @@ chisq.test(GenderGrade) #grade depends on gender (significant)
 
 ## Part 2
 
-```{r eval=FALSE, echo=TRUE}
+```{r eval=FALSE, echo=FALSE}
 ##1-Read the excel file called 'EX Biostat P2' into R 
 Biostat2 <- readxl::read_xlsx("data/EX Biostat P2.xlsx")
 
@@ -657,7 +658,7 @@ summarise(Biostat2, MeanAge = mean(Age), sdAge = sd(Age),
 
 ## Part 3
 
-```{r eval=FALSE, echo=TRUE}
+```{r eval=FALSE, echo=FALSE}
 RCC2 <- readxl::read_xlsx("data/RCC2.xlsx")
 
 library(ggplot2)

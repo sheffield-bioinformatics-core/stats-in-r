@@ -353,7 +353,7 @@ The first hypothesis we will test is whether the people in the study are overwei
 
 $BMI = weight  / height^2$
 
-*where the weight is measured in kg and the height in metres*
+(*where the weight is measured in kg, and the height in metres*)
 
 <div class="alert alert-warning">
 **Exercise**
@@ -380,7 +380,7 @@ The one-sample t-test is implemented in the function `t.test`. The only input we
 t.test(diet$BMI)
 ```
 
-We get a significant result! However, if we look at the description for `t.test` it is testing against a population mean of $0$. It is no surprise that we get a significant result! By changing the `mu` argument we perform the desired test.
+We get a significant result! However, if we look at the description for `t.test` it is testing against a population mean of $0$. It is no surprise that we get a significant result! By changing the `mu` argument we can perform a test to see if the people in the study are overweight to begin with (using 25 as the population or known mean).
 
 ```{r}
 ## 25 is the cutoff for overweight
@@ -396,7 +396,7 @@ An independent two-sample t-test is used when the two samples are independent of
 
 As the name suggests,a paired two-sample t-test is used when the two samples are paired, e.g. *comparing the mean blood pressure of patients before and after treatment* (two measurements per patient).
 
-We might wonder if there is actually any effect due to diet. To perform this test we can compare two columns from the `diet` data frame directly using the `$` notation.
+Back to our dataset, we might wonder if there is actually any effect due to diet. To perform this test we can compare two columns from the `diet` data frame directly using the `$` notation.
 
 ```{r}
 t.test(diet$final.weight, diet$initial.weight)
@@ -424,7 +424,7 @@ t.test(diet$weight.loss)
 
 ## The Independent t test.......TWO independent groups 
 
-Lets consider that we want to compare whether males or females lost more weight during the trial. Here we have two groups and these can be treated as *independent* variables as different patients belong to the two groups.
+Lets consider that we want to compare whether males or females lost more weight during the trial. Here we have two groups and these can be treated as *independant* variables as different patients belong to the two groups.
 
 The *null hypothesis* for such a test would be that the weight loss is the same between groups male and female. We seek to evidence to reject this hypothesis by calculating a test statistic. Firstly, we have to check for normality:-
 
@@ -438,27 +438,7 @@ group_by(diet, gender) %>%
 We conclude that the variances are approximately the same and both variables are normally-distributed
 
 
-We can use the `t.test` function to perform an *independent* test, although we need to use the function in a slightly different way. If we recall how we performed the test on initial and final weights, both `final.weight` and `initial.weight` were existing columns in the data
-
-```{r eval=FALSE}
-t.test(diet$final.weight, diet$initial.weight,alternative = "less")
-
-## General usage to compare variables in columns X and Y
-t.test(diet$X, diet$Y)
-
-```
-
-For the test we propose (males vs females) we do not have corresponding columns for male and female weights. Instead, we have a column which tells us the gender of each individual. For cases such as this we can employ the formula s
-
-```{r eval=FALSE}
-## Here, X is a numeric variable and Group contains grouping information
-t.test(diet$X ~ diet$Group)
-## an alternative with less to type
-t.test(X ~ Group, data = diet)
-
-```
-
-
+We can now use the `t.test` function to perform an *independant* test. The first argument to `t.test` is the *R formula* notation for the test being performed. It allows us to define which columns in our dataset are the numeric and grouping variables in the test.
 
 This function allows various type of test to be performed by changing the appropriate arguments (see the help for `t.test` for details (`?t.test`)). For instance, we can tell the test that we believe our variances are equal or not.
 
@@ -469,14 +449,6 @@ t.test(weight.loss ~ gender, data=diet, var.equal=TRUE)
 We can see that the t-statistic we observe is consistent with the null hypothesis, that the weight loss in males and females is the same. That is, the probability of observing a t-statistic of 0.2 or more, or -0.2 or less, is quite high.
 
 *This is not a significant result (p>0.05), so there is no evidence of a difference in weight loss between males and females*
-
-There is no difference in weight loss between males and females. However, the test of interest is whether some diets are more beneficial. If we attempt to test the difference between diets, the following happens:-
-
-```{r eval=FALSE}
-t.test(weight.loss ~ diet.type,data=diet)
-```
-
-In other words, the t-test is only applicable for comparing two groups and we have three diets that we want to compare.
 
 
 ## Non- Parametric alternatives (Wilcoxon test)
@@ -495,7 +467,7 @@ The assumptions of the Mann-Whitney U are as follows:
 
 3.The dependent variables for the two independent groups share a similar shape.
 
-Fortunately, the R programmers have made the function to do a Wilcox test similar to doing a t-test. **The difficulty is in choosing the correct test to apply - which R will not advise you on**.
+Fortunately, the R developers have made the function to do a Wilcox-test similar to doing a t-test. **The difficulty is in choosing the correct test to apply - which R will not advise you on**.
 
 Let's go back to our example of comparing weight loss between groups male and female. The equivalent non-parametric version of the test we performed before is:-
 
