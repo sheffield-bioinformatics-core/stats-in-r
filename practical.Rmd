@@ -81,8 +81,9 @@ These can also be plotted
 ```{r}
 # Use of plotting in base R for convenience
 plot(t2)
-barplot(t2)
-barplot(t2, beside=TRUE)
+## add the legend.text=TRUE argument to produce a legend
+barplot(t2,legend.text = TRUE)
+barplot(t2, beside=TRUE,legend.text = TRUE)
 ```
 
 The `prop.table` function can also be applied to these tables. By default the calculated proportions will be a proportion of the total number of observations.
@@ -247,7 +248,7 @@ However, this doesn't work. If you check the y-axis limits on the histogram and 
 
 
 ```{r}
-ggplot(df1, aes(x=x)) + geom_histogram(aes(y=..density..)) + geom_density()
+ggplot(df1, aes(x=x)) + geom_histogram(aes(y=..density..)) + geom_density(col="blue")
 ```
 
 Although we generally recommend `ggplot2`, the "base" `hist` function sometimes does a better job of choosing the bin widths for the histogram. It is worth looking at the base plot if the `ggplot` doesn't look particularly convincing.
@@ -370,8 +371,11 @@ diet <- mutate(diet,BMI = initial.weight / (height/100)^2)
 We can now test our new variable for normality using the plots and tests from earlier
 
 ```{r eval=FALSE}
-ggplot(diet, aes(x = BMI)) + geom_histogram()
+ggplot(diet, aes(x = BMI))+ geom_histogram(aes(y=..density..)) + geom_density(col="blue")
 
+ggplot(diet, aes(sample=BMI)) + geom_qq() + geom_qq_line()
+
+shapiro.test(diet$BMI)
 ```
 
 The one-sample t-test is implemented in the function `t.test`. The only input we need to specify is a *vector* of numeric values and it will perform a statistical test. For simplicity, we can use the `$` notation in R to extract the column. This will provide us with a *t* test statistic and a p-value. **However, it is up to us to interpret the p-value**.
@@ -571,9 +575,11 @@ diet2 <- read_csv("data/diet2.csv")
 View(diet2)
 ```
 
-However, the three measures that we want to compare are given as columns in the data frame. We cannot express this using the R `~` notation. In other words the data is in *wide* format and not *long*. We can change this using the `reshape2` package. This creates a variable for the type of measurement (initial / mid / final) and a value.
+However, the three measures that we want to compare are given as columns in the data frame. We cannot express this using the R `~` notation. In other words the data is in *wide* format and not *long*. We can change this using the `tidyr` package. This creates a variable for the type of measurement (`initial`, `mid` or `final)` and a variable containing the corresponding value. The default column names are `name` and `value` respectively.
 
 ```{r}
+### With "::" you can use a function from a package you haven't loaded yet
+
 diet_melt <- diet2 %>% select(contains("weight")) %>% 
   tidyr::pivot_longer(1:3)
 ```
@@ -604,7 +610,7 @@ Please test those alternative hypotheses and state whether you will accept or re
 
 ## Part 1
 
-```{r eval=FALSE}
+```{r eval=FALSE, echo=TRUE}
 ##1-Read the excel file called 'EX Biostat P1' into R 
 Biostat1 <- readxl::read_xlsx("data/EX Biostat P1.xlsx")
 
@@ -625,7 +631,7 @@ chisq.test(GenderGrade) #grade depends on gender (significant)
 
 ## Part 2
 
-```{r eval=FALSE, echo=FALSE}
+```{r eval=FALSE, echo=TRUE}
 ##1-Read the excel file called 'EX Biostat P2' into R 
 Biostat2 <- readxl::read_xlsx("data/EX Biostat P2.xlsx")
 
@@ -658,7 +664,7 @@ summarise(Biostat2, MeanAge = mean(Age), sdAge = sd(Age),
 
 ## Part 3
 
-```{r eval=FALSE, echo=FALSE}
+```{r eval=FALSE, echo=TRUE}
 RCC2 <- readxl::read_xlsx("data/RCC2.xlsx")
 
 library(ggplot2)
