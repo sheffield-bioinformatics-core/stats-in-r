@@ -341,7 +341,7 @@ summarise(df1, Mean = mean(x),
 In this part we will show how to perform tests to compare 1, 2 (or more) continuous variables. The dataset, provided by MASH at The University of Sheffield, describes individuals that have been following different diets and their age and gender. The main goal of interest is to determine which of three competing diet regimes results in the greatest weight loss. However, we can use the dataset to demonstrate other types of test.
 
 ```{r message=FALSE}
-diet <- read_csv("data/diet2.csv")
+diet <- read_csv("data/diet.csv")
 diet
 ```
 
@@ -556,25 +556,29 @@ TukeyHSD(anova)
 
 ```
 
+
 ## Repeated Measures
 
-Let's revist our dataset. Here, there is a midpoint weight measurement, so we have repeated measures.
+We will read a modified version of the diet dataset in order to test a "repeated measures" analysis. Here we have added a midpoint weight measurement.
 
 ```{r}
-diet
+diet2 <- read_csv("data/diet2.csv")
+View(diet2)
 ```
 
-However, the three measures that we want to compare are given as columns in the data frame. We cannot express this using the R `~` notation. In other words the data is in *wide* format and not *long*. We can change this using the `reshape2` package. This creates a variable for the type of measurement (initial / mid / final) and a value.
+However, the three measures that we want to compare are given as columns in the data frame. We cannot express this using the R `~` notation. In other words the data is in *wide* format and not *long*. We can change this using the `tidyr` package. This creates a variable for the type of measurement (`initial`, `mid` or `final)` and a variable containing the corresponding value. The default column names are `name` and `value` respectively.
 
 ```{r}
-diet_melt <- diet2 %>% select(contains("weight")) %>% 
+### With "::" you can use a function from a package you haven't loaded yet
+
+diet_melt <- diet %>% select(contains("weight")) %>% 
   tidyr::pivot_longer(1:3)
-
 ```
 
 ```{r}
-summary(aov(value~variable,data=diet_melt))
+summary(aov(value~name,data=diet_melt))
 ```
+
 
 
 
