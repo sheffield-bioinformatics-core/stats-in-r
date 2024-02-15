@@ -51,7 +51,7 @@ library(vcd)
 head(Arthritis)
 ```
 
-In base R, we can extract a column from a table using the `$` notation. With tab-completion the column can be selected without introducing any typos. The `count` function can then be used directly to give a tabulation of the values in the column.
+The `count` function, included in `dplyr` can be used to give a tabulation of the values in any column in the data frame.
 
 ```{r message=FALSE}
 ##one way table (count of one variable)
@@ -76,7 +76,7 @@ count(Arthritis,Sex) %>%
 
 ```
 
-The `table` function can also compare two columns from a data frame if both columns are given as arguments.
+The `count` function can also compare two columns from a data frame if both columns are given as arguments.
 
 ```{r}
 count(Arthritis,Sex,Improved)
@@ -88,6 +88,8 @@ These can also be plotted
 count(Arthritis,Sex,Improved) %>% 
 ggplot(aes(x = Sex, fill = Improved, y = n)) + geom_col()
 ```
+
+
 ```{r}
 count(Arthritis,Sex,Improved) %>% 
 ggplot(aes(x = Sex, fill = Improved, y = n)) + geom_col(position = "dodge")
@@ -103,7 +105,7 @@ count(Arthritis,Sex) %>%
 
 ```
 
-An extra argument can also be supplied to allow the proportions to be expressed as a proportion of the first or second variable.
+An extra `group_by` function can be used prior to the calculate of the proportions which allows the values be expressed as a proportion of the first or second variable.
 
 ```{r}
 count(Arthritis,Sex, Improved) %>% 
@@ -121,7 +123,7 @@ count(Arthritis,Sex,Improved,Treatment)
 ```
 Having explored our data, we can now perform statistical testing. The function `chisq_test` can be used to assess whether differences in proportions are significant or not. We actually don't need to calculate the proportions; R will do this for us.
 
-We need to re-format the data slightly
+However, we need to re-format the data slightly into a *wide* table rather than the default *long* nature of a data frame in the `tidyverse`. We the `pivot_wider` function we create a two-by-two table that is typically used for a contingency analysis.
 
 ```{r}
 Arthritis %>% 
@@ -130,7 +132,7 @@ Arthritis %>%
 
 ```
 
-And now remove the `Treatment` column so that it only have numeric data
+And now remove the `Treatment` column so that that data frame only has numeric data
 
 ```{r}
 Arthritis %>% 
@@ -138,9 +140,6 @@ Arthritis %>%
   tidyr::pivot_wider(values_from = n,names_from = Improved) %>% 
 select(-Treatment)  %>% chisq_test
 ```
-
-
-
 
 However, the `chisq.test` function is not appropriate in all circumstances.
 
@@ -213,15 +212,11 @@ Various graphical methods are available to assess the distribution. The first of
 gghistogram(df1,x="Value")
 ```
 
-```{r}
-gghistogram(df1,x="Value",facet.by = "Var")
-```
-
 
 A similar option is to produce a density curve. Here the y-axis is the *density* of a particular value.
 
 ```{r}
-ggdensity(df1, x="Value",facet.by = "Var")
+ggdensity(df1, x="Value")
 ```
 
 ### Combining Histograms and Density 
@@ -229,20 +224,20 @@ ggdensity(df1, x="Value",facet.by = "Var")
 When assessing the distribution of a variable, you might be tempted to plot the histogram and density on the same plot. `gghistogram` has the argument `add_density`, which should do the job.
 
 ```{r}
-gghistogram(df1,x="Value",facet.by = "Var",add_density = TRUE)
+gghistogram(df1,x="Value",add_density = TRUE)
 ```
 
 However, this doesn't work. If you check the y-axis limits on the histogram and density plots, you'll notice they are on a different scale. After some digging around the solution is [as follows](http://www.cookbook-r.com/Graphs/Plotting_distributions_(ggplot2)/)
 
 
 ```{r}
-gghistogram(df1,x="Value",facet.by = "Var",add_density = TRUE,y="..density..")
+gghistogram(df1,x="Value",add_density = TRUE,y="..density..")
 ```
 
 We can add the *standard* normal curve with the following:-
 
 ```{r}
-gghistogram(df1,x="Value",facet.by = "Var",add_density = TRUE,y="..density..") + stat_overlay_normal_density(col="steelblue")
+gghistogram(df1,x="Value",add_density = TRUE,y="..density..") + stat_overlay_normal_density(col="steelblue")
 ```
 
 
@@ -390,6 +385,9 @@ diet %>%
   tidyr::pivot_longer(everything(),values_to = "Weight",names_to = "Time") %>% 
   ggplot(aes(x = Time, y = Weight)) + geom_boxplot()
 ```
+
+
+
 ```{r}
 diet %>% 
   select(contains("weight")) %>% 
@@ -424,6 +422,7 @@ diet %>%
 ```{r}
 t.test(diet$final.weight, diet$initial.weight,alternative = "less")
 ```
+
 ```{r}
 diet %>% 
   select(contains("weight")) %>% 
@@ -432,7 +431,7 @@ diet %>%
 ```
 
 
-There is also extra information that we could employ; namely that the measurements of weight are made **on the same person** before and after dieting. This is a classic example of when to apply a paired t-test. Again, we do not need to use a different function to perform the test; only add an argument `paired=TRUE` to `t.test`.
+There is also extra information that we could employ; namely that the measurements of weight are made **on the same person** before and after dieting. This is a classic example of when to apply a paired t-test. Again, we do not need to use a different function to perform the test; only add an argument `paired=TRUE` to `t_test`.
 
 ```{r}
 diet %>% 
@@ -449,10 +448,13 @@ t.test(diet$final.weight, diet$initial.weight,alternative = "less", paired=TRUE)
 The output of the test is quite informative as it suggest that testing has been performed on sets of differences. In actual fact, this is the same as performing  a *one-sample test* on the differences we have already calculated:-
 
 ```{r}
-diet %>% 
-  select(contains("weight")) %>% 
-  mutate(loss = final.weight - initial.weight) %>% 
-  t_test(loss ~ 1,alternative = "less")
+diet <- mutate(diet, weight.loss = final.weight - initial.weight)
+```
+
+
+```{r}
+diet %>%  
+  t_test(weight.loss ~ 1,alternative = "less")
 ```
 A convenient plot in `ggpubr` will allow us to visualise the paired differences
 
@@ -461,7 +463,7 @@ ggpaired(diet, cond1="initial.weight", cond2="final.weight",line.color = "grey")
 ```
 
 
-## The Independent t test.......TWO independent groups 
+## The Independent t test, with two independent groups 
 
 Lets consider that we want to compare whether males or females lost more weight during the trial. Here we have two groups and these can be treated as *independant* variables as different patients belong to the two groups.
 
@@ -469,11 +471,9 @@ The *null hypothesis* for such a test would be that the weight loss is the same 
 
 ```{r}
 diet %>% 
-  mutate(weight.loss = final.weight - initial.weight) %>% 
 ggdensity("weight.loss",color = "gender") + stat_overlay_normal_density()
 
-diet %>% 
-  mutate(weight.loss = final.weight - initial.weight) %>% 
+diet %>%  
   group_by(gender) %>% 
   shapiro_test(weight.loss)
   
@@ -489,14 +489,9 @@ This function allows various type of test to be performed by changing the approp
 
 ```{r}
 diet %>% 
-  mutate(weight.loss = final.weight - initial.weight) %>% 
   t_test(weight.loss ~ gender)
 ```
 
-```{r}
-diet <- mutate(diet, weight.loss = final.weight - initial.weight)
-t.test(weight.loss ~ gender, data=diet, var.equal=TRUE)
-```
 
 We can see that the t-statistic we observe is consistent with the null hypothesis, that the weight loss in males and females is the same. That is, the probability of observing a t-statistic of 0.2 or more, or -0.2 or less, is quite high.
 
@@ -504,11 +499,10 @@ We can see that the t-statistic we observe is consistent with the null hypothesi
 
 ```{r}
 diet %>% 
-  mutate(weight.loss = final.weight - initial.weight) %>% 
   ggplot(aes(x = gender, y=weight.loss)) + geom_boxplot() + stat_compare_means(method="t.test")
 ```
 
-## Non- Parametric alternatives (Wilcoxon test)
+## Non- Parametric alternatives (e.g. the Wilcoxon test)
 
 Being able to use the `t-test` relies on the your data being normally-distributed. If we do not sufficient confidence in this assumption, there are different statistical tests that can be applied. Rather than calculating and comparing the *means* and *variances* of different groups they are *rank-based* methods. However, they still come with a set of assumptions and involve the generation of test statistics and p-values.
 
@@ -530,27 +524,16 @@ Let's go back to our example of comparing weight loss between groups male and fe
 
 ```{r}
 diet %>% 
-  mutate(weight.loss = final.weight - initial.weight) %>% 
   wilcox_test(weight.loss ~ gender)
 ```
 
-
-```{r}
-wilcox.test(weight.loss~gender, data=diet)
-```
-
-The `wilcox.test` is flexible in much the same way that `t.test` in. We can switch to applying a paired test by adding the argument `paired=TRUE`.
+The `wilcox_test` is flexible in much the same way that `t_test` in. We can switch to applying a paired test by adding the argument `paired=TRUE`.
 
 ```{r}
 diet %>% 
   select(initial.weight,final.weight) %>% 
   tidyr::pivot_longer(everything(),values_to = "Weight",names_to = "Time") %>% 
   wilcox_test(Weight ~ Time, paired=TRUE)
-```
-
-
-```{r}
-wilcox.test(diet$final.weight,diet$initial.weight, paired=TRUE)
 ```
 
 
@@ -563,7 +546,10 @@ The two-sample t-test is useful when we have just two groups of continuous data 
 In order to justify if an ANOVA test is appropriate we have to test for normality.
 
 ```{r}
-ggplot(diet, aes(x = diet.type, y = weight.loss)) + geom_violin()
+
+
+diet %>%   
+ggplot(aes(x = diet.type, y = weight.loss)) + geom_violin()
 group_by(diet, diet.type) %>% 
   shapiro_test(weight.loss)
 ```
@@ -575,12 +561,6 @@ diet %>%
   anova_test(weight.loss ~ diet.type)
 ```
 
-
-
-```{r}
-anova <- aov(weight.loss ~ diet.type, data=diet)
-summary(anova)
-```
 
 When the test provides a significant result it tells us that there is at least on difference in the groups. However, it does not tell us which group is different. For this, we can apply a "post-hoc test" such as the Tukey test. If `summary(anova)` did not produce a significant p-value, we wouldn't proceed with this step
 
