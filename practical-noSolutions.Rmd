@@ -544,9 +544,11 @@ The *null hypothesis* for such a test would be that the weight loss is the same 
 
 ```{r}
 diet %>% 
+mutate(weight.loss = initial.weight - final.weight) %>% 
 ggdensity("weight.loss",color = "gender") + stat_overlay_normal_density()
 
 diet %>%  
+  mutate(weight.loss = initial.weight - final.weight) %>% 
   group_by(gender) %>% 
   shapiro_test(weight.loss)
   
@@ -562,6 +564,7 @@ This function allows various type of test to be performed by changing the approp
 
 ```{r}
 diet %>% 
+  mutate(weight.loss = initial.weight - final.weight) %>% 
   t_test(weight.loss ~ gender)
 ```
 
@@ -572,6 +575,7 @@ We can see that the t-statistic we observe is consistent with the null hypothesi
 
 ```{r}
 diet %>% 
+  mutate(weight.loss = initial.weight - final.weight) %>% 
   ggplot(aes(x = gender, y=weight.loss)) + geom_boxplot() + stat_compare_means(method="t.test")
 ```
 
