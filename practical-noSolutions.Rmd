@@ -601,6 +601,7 @@ Let's go back to our example of comparing weight loss between groups male and fe
 
 ```{r}
 diet %>% 
+  mutate(weight.loss = initial.weight - final.weight) %>% 
   wilcox_test(weight.loss ~ gender)
 ```
 
@@ -626,6 +627,7 @@ In order to justify if an ANOVA test is appropriate we have to test for normalit
 
 
 diet %>%   
+  mutate(weight.loss = initial.weight - final.weight) %>% 
 ggplot(aes(x = diet.type, y = weight.loss)) + geom_violin()
 group_by(diet, diet.type) %>% 
   shapiro_test(weight.loss)
@@ -635,6 +637,7 @@ A one-way ANOVA compares group means by partitioning the variation in the data i
 
 ```{r}
 diet %>% 
+  mutate(weight.loss = initial.weight - final.weight) %>% 
   anova_test(weight.loss ~ diet.type)
 ```
 
@@ -643,6 +646,7 @@ When the test provides a significant result it tells us that there is at least o
 
 ```{r}
 diet %>% 
+  mutate(weight.loss = initial.weight - final.weight) %>% 
   tukey_hsd(weight.loss ~ diet.type)
 ```
 
