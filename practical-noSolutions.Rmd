@@ -773,4 +773,3 @@ Please test those alternative hypotheses and state whether you will accept or re
 # Solutions
 
 **To be revealed during the workshop!**
-
