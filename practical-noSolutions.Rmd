@@ -631,41 +631,47 @@ gghistogram(x = "weight.loss", facet.by = "diet.type", add_density = TRUE, y = "
 
 group_by(diet, diet.type) %>% 
   shapiro_test(weight.loss)
+
+
+diet %>% 
+  ggqqplot(x = "weight.loss", facet.by = "diet.type")
+
 ```
 
-A one-way ANOVA compares group means by partitioning the variation in the data into *between group variance* and *within group variance*. Like the other statistical tests we have encountered, the functions in R do the hard work of calculating the statistics. Performing the analysis is in two stages; fit the model using the `aov` function and then assess the significance using the `summary` function
+A one-way ANOVA compares group means by partitioning the variation in the data into *between group variance* and *within group variance*. Like the other statistical tests we have encountered, the functions in R do the hard work of calculating the statistics. The `anova_test` function is a tidy version of the ANOVA test.
 
 ```{r}
 diet %>% 
-  mutate(weight.loss = initial.weight - final.weight) %>% 
   anova_test(weight.loss ~ diet.type)
 ```
 
 
-When the test provides a significant result it tells us that there is at least on difference in the groups. However, it does not tell us which group is different. For this, we can apply a "post-hoc test" such as the Tukey test. If `summary(anova)` did not produce a significant p-value, we wouldn't proceed with this step
+When the test provides a significant result (like above) it tells us that there is at least on difference in the groups. However, it does not tell us which group is different. For this, we can apply a "post-hoc test" such as the Tukey test. If `anova_test` did not produce a significant p-value, we wouldn't proceed with this step
 
 ```{r}
-diet %>% 
-  mutate(weight.loss = initial.weight - final.weight) %>% 
+diet %>%  
   tukey_hsd(weight.loss ~ diet.type)
 ```
 
-
+As we have seen previously, a standard method of presenting the differences between groups is to use the `stat_compare_means` function to automatically add p-values to a boxplot or violin plot
 
 ```{r}
-TukeyHSD(anova)
+ggplot(diet, aes(x = diet.type, y = weight.loss)) + geom_violin() + geom_jitter(width=0.1) + stat_compare_means(method="anova")
 ```
+However, in the case of more than two groups it will only show a single p-value from the ANOVA rather than individual comparisons. We can explicitly list particular contrasts we are interested in.
 
 ```{r}
 my_comparisons <- list( c("A", "B"), c("A", "C"), c("B", "C") )
 
-ggplot(diet, aes(x = diet.type, y = weight.loss)) + geom_violin() + stat_compare_means(method = "t.test",comparisons = my_comparisons)
+ggplot(diet, aes(x = diet.type, y = weight.loss)) + geom_violin() + geom_jitter() +  stat_compare_means(method = "t.test",comparisons = my_comparisons)
 ```
+Alternatively, we can manually-compute the p-values and add these to the plot.
+
 ```{r}
 stat_res <- diet %>% 
   tukey_hsd(weight.loss ~ diet.type)
 
-ggplot(diet, aes(x = diet.type, y = weight.loss)) + geom_violin() + stat_pvalue_manual(stat_res, label = "p.adj",y.position = c(5, 10, 15))
+ggplot(diet, aes(x = diet.type, y = weight.loss)) + geom_violin() + stat_pvalue_manual(stat_res, label = "p.adj",y.position = c(11, 13, 15))
 ```
 
 
@@ -685,17 +691,12 @@ kruskal.test(weight.loss ~ as.factor(diet.type), data=diet)
 ```
 
 Like the one-way ANOVA this will only tell us that at least one group is different and not specifically which group(s). The post-hoc `dunn.test` is recommended which also performs multiple testing correction.
+
 ```{r}
 diet %>% 
   dunn_test(weight.loss ~ diet.type)
 ```
 
-
-
-```{r}
-library(dunn.test)
-dunn.test(diet$weight.loss,diet$diet.type,method = "Bonferroni")
-```
 
 At this point we could be about to recommend diet C to those that wish to lose weight. However, are there any other factors in the data that we should be considering? With `ggplot2` we can quite easily visualise the effects of multiple factors on the data. Lets add both gender and diet type into the plot. It now appears that diet C is having an effect on males but not females.
 
@@ -705,18 +706,13 @@ ggplot(diet, aes(x = diet.type, y = weight.loss,fill=gender)) + geom_boxplot()
 
 ## Two-way ANOVA
 
-The *formula* notation allows us to specify an *interaction* between gender and diet type. In other words, we are looking to see if the effect of diet type is different for males and females.
+The *formula* notation allows us to specify an *interaction* between gender and diet type. In other words, we are looking to see if the effect of diet type is different for males and females. In R, the formula for an interaction is specified using a `*` between the variables that we are interested in assessing the interaction for.
 
 ```{r}
 diet %>% 
   anova_test(weight.loss ~ diet.type*gender)
 ```
 
-
-```{r}
-anova <- aov(weight.loss ~ diet.type*gender, data=diet)
-summary(anova)
-```
 
 This tells us that an effect exists between diet type and gender, but like before we have to run a post-hoc test to discover more
 
@@ -726,17 +722,14 @@ diet %>%
 ```
 
 
-```{r}
-TukeyHSD(anova)
-```
 
-```{r}
-TukeyHSD(anova)
 
-```
 
 
 ## Repeated Measures
+
+
+**CHECK THIS CODE DOES WHAT WE WANT**
 
 We will read a modified version of the diet dataset in order to test a "repeated measures" analysis. Here we have added a midpoint weight measurement.
 
@@ -750,14 +743,16 @@ However, the three measures that we want to compare are given as columns in the 
 ```{r}
 ### With "::" you can use a function from a package you haven't loaded yet
 
-diet_melt <- diet %>% select(contains("weight")) %>% 
-  tidyr::pivot_longer(1:3)
+diet_melt <- diet %>% select(id,gender, contains("weight")) %>% 
+  tidyr::pivot_longer(3:5, values_to = "value", names_to = "time_point") %>% 
+  mutate(id = as.factor(id))
 ```
 
 ```{r}
-summary(aov(value~name,data=diet_melt))
+anova_test(diet_melt, dv =value, 
+           wid = id, 
+           within = time_point)
 ```
-
 
 
 
