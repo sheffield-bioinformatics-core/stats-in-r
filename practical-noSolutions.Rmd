@@ -624,11 +624,11 @@ The two-sample t-test is useful when we have just two groups of continuous data 
 In order to justify if an ANOVA test is appropriate we have to test for normality.
 
 ```{r}
-
+diet <- mutate(diet, weight.loss = initial.weight - final.weight)
 
 diet %>%   
-  mutate(weight.loss = initial.weight - final.weight) %>% 
-ggplot(aes(x = diet.type, y = weight.loss)) + geom_violin()
+gghistogram(x = "weight.loss", facet.by = "diet.type", add_density = TRUE, y = "..density..") + stat_overlay_normal_density(col="red")
+
 group_by(diet, diet.type) %>% 
   shapiro_test(weight.loss)
 ```
