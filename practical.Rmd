@@ -791,6 +791,9 @@ Please test those alternative hypotheses and state whether you will accept or re
 # Solutions
 
 **To be revealed during the workshop!**
+
+**Note that the code is included from the older version of the course (using base R and ggplot2) as well as rstatix and ggpubr to check we get the same answers**
+
 ## Exercise 1
 
 ```{r}
@@ -812,6 +815,7 @@ addmargins(GenderGrade,2) #(71 Females, 59 males)
 ##5-Use the appropriate test to check if the tumor grade depends on the gender 
 chisq.test(GenderGrade) #grade depends on gender (significant)
 ```
+
 ```{r}
 ## NEW
 
