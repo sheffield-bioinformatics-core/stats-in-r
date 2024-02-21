@@ -551,8 +551,8 @@ Easy way of showing stats result on the plot is using `stat_compare_means`
 ```{r}
 diet %>% 
   select(contains("weight")) %>% 
-  tidyr::pivot_longer(everything(),values_to = "Weight",names_to = "Time") %>% 
-  ggplot(aes(x = Time, y = Weight)) + geom_boxplot() + geom_jitter(width=0.1) + stat_compare_means(method = "t.test",method.args = list(alternative = "less"))
+  tidyr::pivot_longer(everything(),values_to = "Y",names_to = "X") %>% 
+  ggplot(aes(x = X, y = Y)) + geom_boxplot() + geom_jitter(width=0.1) + stat_compare_means(method = "t.test",method.args = list(alternative = "less"))
 ```
 
 
@@ -651,8 +651,8 @@ The `wilcox_test` is flexible in much the same way that `t_test` in. We can swit
 ```{r}
 diet %>% 
   select(initial.weight,final.weight) %>% 
-  tidyr::pivot_longer(everything(),values_to = "Weight",names_to = "Time") %>% 
-  wilcox_test(Weight ~ Time, paired=TRUE)
+  tidyr::pivot_longer(everything(),values_to = "Y",names_to = "X") %>% 
+  wilcox_test(Y ~ X, paired=TRUE)
 ```
 
 
