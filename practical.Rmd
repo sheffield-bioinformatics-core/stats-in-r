@@ -40,7 +40,9 @@ install.packages(c("dplyr",
                    "readxl",
                    "rstatix",
                    "ggpubr",
-                   "rmarkdown")) 
+                   "rmarkdown",
+                   "tidyr",
+                   "vcd")) 
 ```
 
 
@@ -139,6 +141,8 @@ Arthritis %>%
   count(Improved, Treatment) %>% 
   tidyr::pivot_wider(values_from = n,names_from = Improved)
 
+##would also work with names_from Treatment
+
 ```
 
 And now remove the `Treatment` column as the `chisq_test` function is only expecting numeric data.
@@ -153,6 +157,15 @@ select(-Treatment)  %>%
   chisq_test()
 ```
 
+```{r}
+Arthritis %>% 
+  count(Improved, Treatment) %>% 
+  tidyr::pivot_wider(values_from = n,names_from = Improved) %>% 
+select(-Treatment)  %>% 
+  chisq_test() %>% expected_freq()
+```
+
+
 However, the `chisq_test` function is not appropriate in all circumstances.
 
 ```{r}
@@ -160,7 +173,7 @@ Arthritis %>%
   count(Improved, Sex) %>% 
   tidyr::pivot_wider(values_from = n,names_from = Improved) %>% 
   select(-Sex)  %>% 
-  chisq_test
+  chisq_test 
 ```
 
 The Fisher test is recommended for tables with low numbers of observations (e.g. when more than 20% of cells have expected frequencies < 5)
@@ -180,7 +193,7 @@ Arthritis %>%
 
 1- Read the excel file called `Ex Biostat P1.xlsx` into R (see below for the required code)
 
-2- Use the `counts` function to make a cross-tabulation of Tumour grade and Gender
+2- Use the `counts` function to make a cross-tabulation of Tumour grade against Gender
 
 3- Determine the *percentage* of Grade III tumors within females 
 
@@ -219,6 +232,8 @@ View(df1)
 ```
 
 Various graphical methods are available to assess the distribution. The first of which is a *histogram*. Here, the data are split into "bins" (`ggplot2` chooses the number of bins) and the value on the `y` axis corresponds to the number of observations in that bin. The user only has to specify the variable to be plotted, and `ggplot2` takes care of the binning. From this plot we can judge what the average value of the data is, and the spread.
+
+**Why are we using `gghistogram from ggpubr?**
 
 Histograms can be made in `ggplot2` by using the `geom_hist` function. Here we are going to make use of the `gghistogram` function from `ggpubr`.
 
@@ -262,14 +277,14 @@ gghistogram(df1,x="Value",add_density = TRUE,y="..density..") + stat_overlay_nor
 A box plot is an excellent way of displaying continuous data when you are interested in the spread of your data. The box of the box plot corresponds to the lower and upper quartiles of the respective observations and the bar within the box, the median. The whiskers of the box plot correspond to the distance between the lower/upper quartile and the smaller of: the smaller/largest measurement *OR* 1.5 times the inter quartile range. A disadvantage of the box plot is that you don’t see the exact data points. However, box plots are very useful in large datasets where plotting all of the data may give an unclear picture of the shape of your data.
 
 ```{r}
-## setting x to be empty is required to make a boxplot from one variable
+
 ggboxplot(df1, y = "Value")
 ```
 
-A *violin plot* is sometimes used in conjunction with the boxplot to show density information.
+A *violin plot* is sometimes instead of the boxplot to show density information.
 
 ```{r}
-ggviolin(df1, y = "Var")
+ggviolin(df1, y = "Value")
 ```
 
 Individual points can also be added with `geom_jitter`; avoiding over-plotting by adding random noise along the x-axis.
@@ -379,11 +394,11 @@ The one-sample t-test is implemented in the function `t_test` (as are the variou
 
 Where `Y` is a *numeric* variable and `X` is a categorical variable indicating the 
 
-In the case of a one-sample test we are testing one numeric variable against a know or population mean. This is written as:-
+In the case of a one-sample test we are testing one numeric variable against a known or population mean (`mu`). This is written as:-
 
 `Y ~ 1`
 
-Note that this not the same as testing against a population mean of 1! `t_test` will provide us with a *t* test statistic and a p-value. **However, it is up to us to interpret the p-value according**. There is no guarentee that the test we are conducting is appropriate.
+Note that this not the same as testing against a population mean of 1! `t_test` will provide us with a *t* test statistic and a p-value. **However, it is up to us to interpret the p-value according**. There is no guarantee that the test we are conducting is appropriate.
 
 ```{r}
 diet %>% 
@@ -437,7 +452,7 @@ diet %>%
 The dataset in it's current form is not suitable for analysis with tidy methods. Before proceeding we need to re-format the data into two columns. 
 
 - One column containing numeric variables (each value of weight)
-- An indicator (or categorical) variable to denote that group each numeric observation belongs to (initial or final weight)
+- An indicator (or categorical) variable to denote the group each numeric observation belongs to (initial or final weight)
 
 The `pivot_longer` function supports this transformation. As we want to use all columns in our existing dataset we have to use the `everything()` shortcut to select the columns. The names of our new columns can be chosen, but we will chose `Y` and `X` to be consistent with the formula notation introduced earlier.
 
@@ -520,8 +535,8 @@ There is also extra information that we could employ; namely that the measuremen
 ```{r}
 diet %>% 
   select(contains("weight")) %>% 
-  tidyr::pivot_longer(everything(),values_to = "Weight",names_to = "Time") %>% 
-  t_test(Weight ~ Time,alternative = "less",paired=TRUE)
+  tidyr::pivot_longer(everything(),values_to = "Y",names_to = "X") %>% 
+  t_test(Y ~ X,alternative = "less",paired=TRUE)
 ```
 
 
@@ -694,7 +709,7 @@ Like the one-way ANOVA this will only tell us that at least one group is differe
 
 ```{r}
 diet %>% 
-  dunn_test(weight.loss ~ diet.type)
+  dunn_test(weight.loss ~ diet.type, p.adjust.method = "bonferroni")
 ```
 
 
@@ -743,17 +758,20 @@ However, the three measures that we want to compare are given as columns in the 
 ```{r}
 ### With "::" you can use a function from a package you haven't loaded yet
 
-diet_melt <- diet %>% select(id,gender, contains("weight")) %>% 
+diet2 <- diet2 %>% select(id,gender, contains("weight")) %>% 
   tidyr::pivot_longer(3:5, values_to = "value", names_to = "time_point") %>% 
   mutate(id = as.factor(id))
 ```
 
 ```{r}
-anova_test(diet_melt, dv =value, 
+anova_test(diet2, dv =value, 
            wid = id, 
            within = time_point)
 ```
 
+```{r}
+
+```
 
 
 
@@ -773,7 +791,6 @@ Please test those alternative hypotheses and state whether you will accept or re
 # Solutions
 
 **To be revealed during the workshop!**
-
 ## Exercise 1
 
 ```{r}
