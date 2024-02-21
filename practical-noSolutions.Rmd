@@ -49,7 +49,7 @@ install.packages(c("dplyr",
 
 # Part I - Contingency tables
 
-When working with categorical variables, we are usually interested in the frequencies of the different categories in our sample. To display data for two or more categorical variables, cross-tabulations, or contingency tables, are commonly used - with 2 x 2 tables being the simplest. We can then test whether there is an association between the row factor and the column factor by a *chi-squared test* or a *Fisher’s exact test*.
+When working with categorical variables, we are usually interested in the *frequencies* of the different categories in our sample. To display data for two or more categorical variables, cross-tabulations, or contingency tables, are commonly used - with 2 x 2 tables being the simplest. We can then test whether there is an association between the row factor and the column factor by a *chi-squared test* or a *Fisher’s exact test*.
 
 To demonstrate the analysis of contingency tables we will use a dataset provided with the `vcd` package. You will need to install this package using the `install.packages` R function.
 
@@ -60,10 +60,12 @@ install.packages("vcd")
 
 
 ```{r}
+## Load the packages we will need
 library(dplyr)
 library(ggplot2)
 library(rstatix)
 library(ggpubr)
+library(vcd)
 ```
 
 
@@ -73,7 +75,6 @@ The data frame `Arthritis` should then be accessible which is described as:-
 
 ```{r}
 #let's use the'Arthritis' dataset in the 'vcd' package 
-library(vcd)
 Arthritis
 ```
 
@@ -84,18 +85,17 @@ The `count` function, included in `dplyr` can be used to give a tabulation of th
 count(Arthritis,Sex)
 ```
 
-We can quickly visualise these counts as a *barplot*. A pie chart is possible, but not generally recommended.
+We can quickly visualise these counts as a *barplot* with `ggplot2`. The `geom_bar` plot type will automatically count the number of observations that will be plotted on the y-axis.
 
 ```{r}
 ggplot(Arthritis, aes(x = Sex)) + geom_bar()
 ```
 
-The function `freq_table` is another way of making the counts and will also add the proportions as an extra column.
+The function `freq_table` from `rstatix` is another way of making the counts and will also add the proportions as an extra column.
 
 ```{r}
 #to get proportion of males and females
 freq_table(Arthritis,Sex) 
-
 ```
 
 The `count` function can also compare two columns from a data frame if both columns are given as arguments.
@@ -140,14 +140,10 @@ However, we need to re-format the data slightly into a *wide* table rather than 
 Arthritis %>% 
   count(Improved, Treatment) %>% 
   tidyr::pivot_wider(values_from = n,names_from = Improved)
-
 ##would also work with names_from Treatment
-
 ```
 
-And now remove the `Treatment` column as the `chisq_test` function is only expecting numeric data.
-
-The results are presented in a `tidyverse` tibble that and we can interpret the test statistics and p-value from this table
+And now remove the `Treatment` column as the `chisq_test` function is only expecting numeric data. The results are presented in a `tidyverse` tibble that and we can interpret the test statistics and p-value from this table
 
 ```{r}
 Arthritis %>% 
@@ -157,6 +153,24 @@ select(-Treatment)  %>%
   chisq_test()
 ```
 
+Note that the only line of code to perform the test is `chisq_test`. The preceding lines are used to manipulate our data into the correct format. If our data are already in a numeric table we might be able to use `chisq_test` directly.
+
+```{r}
+## create table of Titanic survivors
+## example from ?chisq_test
+xtab <- as.table(rbind(
+  c(203, 118, 178, 212),
+  c(122, 167, 528, 673)
+))
+dimnames(xtab) <- list(
+  Survived = c("Yes", "No"),
+  Class = c("1st", "2nd", "3rd", "Crew")
+)
+xtab
+chisq_test(xtab)
+```
+The chi-squared test works by comparing the frequencies in each cell of our table to what we would expect by chance (i.e. if there was no significant association). If we want to see what the expected frequencies would be we can run `expected_freq` after `chisq_test`.
+
 ```{r}
 Arthritis %>% 
   count(Improved, Treatment) %>% 
@@ -164,7 +178,6 @@ Arthritis %>%
 select(-Treatment)  %>% 
   chisq_test() %>% expected_freq()
 ```
-
 
 However, the `chisq_test` function is not appropriate in all circumstances.
 
@@ -176,7 +189,7 @@ Arthritis %>%
   chisq_test 
 ```
 
-The Fisher test is recommended for tables with low numbers of observations (e.g. when more than 20% of cells have expected frequencies < 5)
+The Fisher test is recommended for tables with low numbers of observations (e.g. when more than 20% of cells have *expected frequencies* < 5)
 
 ```{r}
 Arthritis %>% 
@@ -184,16 +197,27 @@ Arthritis %>%
   tidyr::pivot_wider(values_from = n,names_from = Improved) %>% 
  select(-Sex)  %>% 
   fisher_test
-
 ```
+
+In this case we had some low expected frequencies so the Fisher test was more appropriate
+
+```{r}
+Arthritis %>% 
+  count(Improved, Sex) %>% 
+  tidyr::pivot_wider(values_from = n,names_from = Improved) %>% 
+  select(-Sex)  %>% 
+  chisq_test %>% 
+  expected_freq()
+```
+
 
 <div class="alert alert-warning">
 
 **Exercise**
 
-1- Read the excel file called `Ex Biostat P1.xlsx` into R (see below for the required code)
+1- Read the excel file called `Ex Biostat P1.xlsx` into R (see below for the required code). We recommend using `make_clean_names` function from `rstatix` to make sure the column names are "clean" (i.e. without spaces or other characters that could cause issues for R).
 
-2- Use the `counts` function to make a cross-tabulation of Tumour grade against Gender
+2- Use the `counts` function to make a cross-tabulation of Tumor grade against Gender
 
 3- Determine the *percentage* of Grade III tumors within females 
 
@@ -203,8 +227,10 @@ Arthritis %>%
 ## the readxl package is required to read xls and xlsx files into R
 ## However, csv and tsv files are recommended to store data
 
-tab <- readxl::read_xlsx("data/EX Biostat P1.xlsx")
+tab <- readxl::read_xlsx("data/EX Biostat P1.xlsx") %>% 
+  make_clean_names()
 
+count(tab, Tumor.grade)
 ```
 
 </div>
