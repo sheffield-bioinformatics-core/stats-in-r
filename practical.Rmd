@@ -198,7 +198,7 @@ Arthritis %>%
 ```
 
 
-<div class="alert alert-warning">
+<div class="exercise">
 
 **Exercise**
 
@@ -338,7 +338,7 @@ df1 %>%
 ```
 
 
-<div class="alert alert-warning">
+<div class="exercise">
 **Exercise**
 
 1- Read the excel file called `Ex Biostat P2.xlsx` into R 
@@ -370,7 +370,7 @@ $BMI = weight  / height^2$
 
 (*where the weight is measured in kg, and the height in metres*)
 
-<div class="alert alert-warning">
+<div class="exercise">
 **Exercise**
 - Add a new variable to the data frame for the BMI of each person 
     + you might want to do this in multiple steps using the `%>%` notation
@@ -475,7 +475,7 @@ diet %>%
   tidyr::pivot_longer(everything(),values_to = "Y",names_to = "X") %>%   t_test(Y ~ X,alternative = "less")
 ```
 
-An intuitive way of showing the test result on the plot is using `stat_compare_means` which will automatically add the p-value to a boxplot.
+An intuitive way of showing the test result on the plot is using a boxplot. For this we will revert to `ggplot2`, but we are include a p-value using the `stat_compare_means` function (from `ggpubr`.
 
 
 ```{r}
@@ -519,13 +519,7 @@ diet %>%
   shapiro_test(weight.loss)
   
 ```
-
-We conclude that the variances are approximately the same and both variables are normally-distributed
-
-
-We can use the `t_test` function to perform an *independant* test. As before, the first argument to `t_test` is the *R formula* notation for the test being performed. However, this time we do not need the `pivot_longer` function as we already the `gender` and `weight.loss` variable in our data frame
-
-This function allows various type of test to be performed by changing the appropriate arguments (see the help for `t.test` for details (`?t.test`)). For instance, we can tell the test that we believe our variances are equal or not.
+and if the variances are roughly the same
 
 ```{r}
 diet %>%  
@@ -534,6 +528,11 @@ diet %>%
   get_summary_stats(weight.loss,type="common")
 ```
 
+We conclude that the variances are approximately the same and both variables are normally-distributed
+
+We can use the `t_test` function to perform an *independant* test. As before, the `formula` argument to `t_test` is the *R formula* notation for the test being performed. However, this time we *do not need the `pivot_longer` function* as we already the `gender` and `weight.loss` variables in our data frame
+
+This function allows various type of test to be performed by changing the appropriate arguments (see the help for `t_test` for details (`?t_test`)). For instance, we can tell the test that we believe our variances are equal or not.
 
 
 ```{r}
@@ -577,7 +576,7 @@ diet %>%
   wilcox_test(weight.loss ~ gender)
 ```
 
-The `wilcox_test` is flexible in much the same way that `t_test` in. We can switch to applying a paired test by adding the argument `paired=TRUE`.
+The `wilcox_test` is flexible in much the same way that `t_test` is. We can switch to applying a paired test by adding the argument `paired=TRUE`.
 
 ```{r}
 diet %>% 
@@ -656,12 +655,6 @@ Data that do not meet the assumptions of ANOVA (e.g. normality) can be tested us
 diet %>% 
   kruskal_test(weight.loss ~ diet.type)
 ```
-
-
-```{r}
-kruskal.test(weight.loss ~ as.factor(diet.type), data=diet)
-```
-
 Like the one-way ANOVA this will only tell us that at least one group is different and not specifically which group(s). The post-hoc `dunn.test` is recommended which also performs multiple testing correction.
 
 ```{r}
@@ -696,8 +689,6 @@ diet %>%
 ## Repeated Measures
 
 
-**CHECK THIS CODE DOES WHAT WE WANT**
-
 We will read a modified version of the diet dataset in order to test a "repeated measures" analysis. Here we have added a midpoint weight measurement.
 
 ```{r}
@@ -705,13 +696,11 @@ diet2 <- read_csv("data/diet2.csv")
 View(diet2)
 ```
 
-However, the three measures that we want to compare are given as columns in the data frame. We cannot express this using the R `~` notation. In other words the data is in *wide* format and not *long*. We can change this using the `tidyr` package. This creates a variable for the type of measurement (`initial`, `mid` or `final)` and a variable containing the corresponding value. The default column names are `name` and `value` respectively.
+However, the three measures that we want to compare are given as columns in the data frame. We cannot express this using the R `~` notation. In other words the data is in *wide* format and not *long*. We can change this using the `tidyr` package. This creates a variable for the type of measurement (`initial`, `mid` or `final)` and a variable containing the corresponding value. 
 
 ```{r}
-### With "::" you can use a function from a package you haven't loaded yet
-
 diet2 <- diet2 %>% select(id,gender, contains("weight")) %>% 
-  tidyr::pivot_longer(3:5, values_to = "value", names_to = "time_point") %>% 
+  pivot_longer(3:5, values_to = "value", names_to = "time_point") %>% 
   mutate(id = as.factor(id))
 ```
 
@@ -721,7 +710,7 @@ anova_test(diet2, dv =value,
            within = time_point)
 ```
 
-<div class="alert alert-warning">
+<div class="exercise">
 **Exercise**
 
 The excel file ‘RCC2’ contains data about the expression levels of some genes in patients with renal cell carcinoma. In your study, you put the following hypotheses.
@@ -739,7 +728,7 @@ Please test those alternative hypotheses and state whether you will accept or re
 **To be revealed during the workshop!**
 
 
-**Note that the code is included from the older version of the course (using base R and ggplot2) as well as rstatix and ggpubr to check we get the same answers**
+**To be revealed during the workshop!**
 
 ## Exercise 1
 
