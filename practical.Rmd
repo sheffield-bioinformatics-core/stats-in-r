@@ -743,27 +743,7 @@ Please test those alternative hypotheses and state whether you will accept or re
 
 ## Exercise 1
 
-```{r}
-###OLD
-
-##1-Read the excel file called 'EX Biostat P1' into R 
-Biostat1 <- readxl::read_xlsx("data/EX Biostat P1.xlsx")
-
-##2-Make a cross table showing the gender in the rows and tumor grade in the columns
-GenderGrade <- table(Biostat1$Gender, Biostat1$`Tumor grade`)
-GenderGrade
-
-##3-Define the percentage of Grade III tumors within females 
-prop.table(GenderGrade,1)*100 #(42.3%)
-
-##4-Add a column in the table showing the sum of the 3 grades in males and in females and state the total number of males and females in the sample 
-addmargins(GenderGrade,2) #(71 Females, 59 males)
-
-##5-Use the appropriate test to check if the tumor grade depends on the gender 
-chisq.test(GenderGrade) #grade depends on gender (significant)
-```
-
-```{r}
+```{r echo=FALSE, include=FALSE}
 ## NEW
 
 Biostat1 <- readxl::read_xlsx("data/EX Biostat P1.xlsx")
@@ -787,42 +767,7 @@ count(Biostat1, Gender, `Tumor grade`) %>%
 ## Exercise 2
 
 
-```{r}
-
-## OLD
-
-##1-Read the excel file called 'EX Biostat P2' into R 
-Biostat2 <- readxl::read_xlsx("data/EX Biostat P2.xlsx")
-
-hist(Biostat2$Age,freq = FALSE)
-lines(density(Biostat2$Age))
-
-##2-Identify if the age and hospitalization days are normally distributed
-library(ggplot2)
-ggplot(Biostat2, aes(x=Age)) + geom_histogram(aes(y=..density..,),binwidth = 2) + geom_density()
-ggplot(Biostat2, aes(x="",y=Age))  + geom_violin() + geom_boxplot()
-ggplot(Biostat2,aes(sample=Age)) + geom_qq() + geom_qq_line()
-shapiro.test(Biostat2$Age)
-# Age normally distributed
-
-
-ggplot(Biostat2, aes(x=`hospitalization days`)) + geom_histogram(aes(y=..density..)) + geom_density()
-ggplot(Biostat2, aes(x="",y=`hospitalization days`))  + geom_violin() + geom_boxplot()
-ggplot(Biostat2,aes(sample=`hospitalization days`)) + geom_qq() + geom_qq_line()
-shapiro.test(Biostat2$`hospitalization days`)
-
-# hospitalization days NOT normally distributed
-
-##3-Use the appropriate descriptive statistics [mean+-SD or median (IQ range)] for each variable
-library(tidyverse)
-summarise(Biostat2, MeanAge = mean(Age), sdAge = sd(Age), 
-          medianHospDays=median(`hospitalization days`), 
-          Q1=quantile(`hospitalization days`, 0.25), 
-          Q3=quantile(`hospitalization days`, 0.75))
-#Age: 9.54 +/- 2.89 [mean +- SD]  & Hospitalization days: 11.5 (9.00 - 14.25) [median(IQ range)]
-```
-
-```{r}
+```{r echo=FALSE, include=FALSE}
 ###NEW
 
 ##1-Read the excel file called 'EX Biostat P2' into R 
@@ -852,4 +797,110 @@ Biostat2 %>%
 get_summary_stats(Biostat2)
 
 ```
+
+## Exercise 3
+
+### 3.1
+
+```{r echo=FALSE, include=FALSE}
+RCC2 <- readxl::read_xlsx("data/RCC2.xlsx")
+
+gghistogram(RCC2, x = "E2F3", 
+            y = "..density..",
+            facet.by = "gender") + stat_overlay_normal_density(col="blue")
+
+RCC2 %>% 
+  group_by(gender) %>% 
+  shapiro_test(E2F3)
+#both groups normally distributed
+#parametric * 2 groups --> t-test
+
+RCC2 %>% 
+  group_by(gender) %>% 
+  get_summary_stats("E2F3",type="common")
+
+t_test(RCC2, E2F3 ~ gender,var.equal = TRUE)
+#ANSWER=REJECT
+
+ggplot(RCC2, aes(x = gender, y = E2F3)) + geom_violin() + geom_jitter(width = 0.1) + stat_compare_means(method = "t.test")
+
+```
+
+### 3.2
+
+```{r echo=FALSE, include=FALSE}
+gghistogram(RCC2, x = "ANXA", facet.by = "Side")
+
+RCC2 %>% 
+  group_by(Side) %>% 
+  shapiro_test(ANXA)
+#not normal
+#non-parametric * 2 groups --> Wilcoxon (Mann Whitney U)
+wilcox_test(RCC2, ANXA ~ Side)
+#ANSWER=REJECT
+ggplot(RCC2, aes(x = Side, y = ANXA)) + geom_violin() + geom_jitter() + stat_compare_means()
+
+```
+
+
+
+### 3.3
+
+
+```{r echo=FALSE, include=FALSE}
+gghistogram(RCC2, x = "E2F3", facet.by = "Grade", y = "..density..") + stat_overlay_normal_density() 
+
+#3 groups normal
+#parametric * > 2 groups --> ANOVA
+
+anova_test(RCC2, E2F3 ~ Grade)
+#there is a difference but between which groups? --> post Hoc
+tukey_hsd(RCC2, E2F3 ~ Grade)
+#ANSWER= ACCEPT
+my_comparisons <- list( c("II", "III"), c("II", "IV"), c("III", "IV") )
+
+ggplot(RCC2, aes(x = Grade, y = E2F3)) + geom_violin() + geom_jitter(width=0.1) + stat_compare_means(method="t.test",comparisons = my_comparisons)
+
+
+```
+
+
+
+### 3.4
+
+
+```{r echo=FALSE, include=FALSE}
+mir499_data <- 
+  RCC2 %>%
+  select(contains("mir499")) %>% 
+  pivot_longer(everything())
+gghistogram(mir499_data, x = "value", facet.by = "name")
+
+mir499_data %>% 
+  group_by(name) %>% 
+  shapiro_test(value)
+#not normal
+#non-parametric * 2 paired groups --> Wilcoxon signed rank test
+
+mir499_data %>% 
+  wilcox_test(value ~ name, paired = TRUE,alternative = "greater")
+mir499_data %>% 
+  group_by(name) %>% 
+  get_summary_stats(value)
+#it increases after ttt
+#ANSWER = REJECT   
+```
+### 3.5
+
+```{r echo=FALSE, include=FALSE}
+gghistogram(RCC2, x = "DFFA", facet.by = "Grade")
+#not normal
+#non-parametric * > 2 groups --> kruskal Wallis
+RCC2 %>% 
+  kruskal_test(DFFA ~ Grade)
+#ANSWER= REJECT
+#No need to perform post-hoc test
+```
+
+
 
