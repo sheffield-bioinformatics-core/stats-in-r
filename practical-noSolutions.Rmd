@@ -369,8 +369,8 @@ $BMI = weight  / height^2$
 </div>
 
 ```{r echo=FALSE}
-diet <- diet %>% 
-  mutate(BMI =initial.weight / (height/100)^2)
+
+
 ```
 
 We can now test our new variable for normality using the plots and tests from earlier, although we will not show all the plots here.
