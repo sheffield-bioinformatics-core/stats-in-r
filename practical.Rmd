@@ -105,7 +105,7 @@ The `count` function can also compare two columns from a data frame if both colu
 count(Arthritis,Sex,Improved)
 ```
 
-These can also be plotted 
+These can also be plotted, but this time we have to use `geom_col` to specify the values for the y-axis.
 
 ```{r}
 count(Arthritis,Sex,Improved) %>% 
@@ -206,7 +206,7 @@ Arthritis %>%
 
 2- Use the `counts` function to make a cross-tabulation of Tumor grade against Gender
 
-3- Determine the *percentage* of Grade III tumors within females 
+3- Determine the proportion of Grade III tumors within females 
 
 4- Use the appropriate test to check if the tumor grade depends on the gender 
 
@@ -247,15 +247,7 @@ gghistogram(df1,x="Value")
 ```
 
 
-A similar option is to produce a density curve with `ggdensity` (also from `ggpubr`). Here the y-axis is the *density* of a particular value.
-
-```{r}
-ggdensity(df1, x="Value")
-```
-
-### Combining Histograms and Density 
-
-When assessing the distribution of a variable, you might be tempted to plot the histogram and density on the same plot. `gghistogram` has the argument `add_density`, which should do the job.
+When assessing the distribution of a variable, you might be tempted to plot the histogram and *density* on the same plot. `gghistogram` has the argument `add_density`, which should do the job.
 
 ```{r}
 gghistogram(df1,x="Value",add_density = TRUE)
@@ -270,7 +262,7 @@ gghistogram(df1,x="Value",
             y="..density..")
 ```
 
-We can add the *standard* normal curve with the following:-
+We can add the *standard* normal curve with the following code. To help distingush the standard normal we can change the colour this is plotted in.
 
 ```{r}
 gghistogram(df1,x="Value",add_density = TRUE,y="..density..") + stat_overlay_normal_density(col="steelblue",lwd=2,lty=2)
@@ -304,13 +296,13 @@ Finally, we have a "*qq-plot*" which allows to compare the quantiles of our data
 ggqqplot(df1, x="Value")
 ```
 
-These graphical methods are by far the easiest way to assess if a given dataset is normally-distributed.
+These graphical methods are by far the easiest way to assess if a given dataset is normally-distributed. However, you do not necessarily need to generate and report all the plots for your data; just as many as you to inform your decision.
 
 For "real-life" data, the results are unlikely to give a perfect plot, so some degree of judgement and prior experience with the data type are required.  Indeed, it should be noted that the dataset visualised in the above plots was sampled from a normal distribution. Even then, the plots were not 100% convincing!
 
 ## Tests for normality
 
-Although their usage is contentious amongst statisticians, there are a few methods for testing whether variables are normally-distributed or not. If the p-value is sufficiently small then we conclude that the data are not normally distributed. However, some statisticians prefer to use graphical methods and their intuition about the data or prior knowledge of the data type (e.g. some measures are generally believed to be normally-distributed)
+Although their usage is contentious amongst statisticians, there are a few methods for testing whether variables are normally-distributed or not. If the p-value is sufficiently small from these methods then we conclude that the data are *not normally distributed*. However, some statisticians prefer to use graphical methods and their intuition about the data or prior knowledge of the data type (e.g. some measures are generally believed to be normally-distributed)
 
 ```{r}
 #shapiro test from rstatix
@@ -371,7 +363,7 @@ $BMI = weight  / height^2$
 (*where the weight is measured in kg, and the height in metres*)
 
 <div class="exercise">
-**Exercise**
+**Exercise (short)**
 - Add a new variable to the data frame for the BMI of each person 
     + you might want to do this in multiple steps using the `%>%` notation
 </div>
@@ -391,9 +383,9 @@ The one-sample t-test is implemented in the function `t_test` (as are the variou
 
 `Y ~ X`
 
-Where `Y` is a *numeric* variable and `X` is a categorical variable indicating the 
+Where `Y` is a *numeric* variable and `X` is a categorical variable indicating the groups that each particular value of `Y` belongs to.
 
-In the case of a one-sample test we are testing one numeric variable against a known or population mean (`mu`). This is written as:-
+In the case of a one-sample test we are testing one numeric variable against a known or population mean (`mu`). As we don't have a groups to compare, this is written as:-
 
 `Y ~ 1`
 
@@ -475,7 +467,7 @@ diet %>%
   tidyr::pivot_longer(everything(),values_to = "Y",names_to = "X") %>%   t_test(Y ~ X,alternative = "less")
 ```
 
-An intuitive way of showing the test result on the plot is using a boxplot. For this we will revert to `ggplot2`, but we are include a p-value using the `stat_compare_means` function (from `ggpubr`.
+An intuitive way of comparing the distributions and showing the test result on the plot is using a boxplot. For this we will revert to `ggplot2`, but we are include a p-value using the `stat_compare_means` function (from `ggpubr`.
 
 
 ```{r}
@@ -512,12 +504,10 @@ The *null hypothesis* for such a test would be that the weight loss is the same 
 diet %>% 
 mutate(weight.loss = initial.weight - final.weight) %>% 
 ggdensity("weight.loss",color = "gender") + stat_overlay_normal_density()
-
 diet %>%  
   mutate(weight.loss = initial.weight - final.weight) %>% 
   group_by(gender) %>% 
   shapiro_test(weight.loss)
-  
 ```
 and if the variances are roughly the same
 
@@ -532,7 +522,7 @@ We conclude that the variances are approximately the same and both variables are
 
 We can use the `t_test` function to perform an *independant* test. As before, the `formula` argument to `t_test` is the *R formula* notation for the test being performed. However, this time we *do not need the `pivot_longer` function* as we already the `gender` and `weight.loss` variables in our data frame
 
-This function allows various type of test to be performed by changing the appropriate arguments (see the help for `t_test` for details (`?t_test`)). For instance, we can tell the test that we believe our variances are equal or not.
+The `t_test` function allows various type of test to be performed by changing the appropriate arguments (see the help for `t_test` for details (`?t_test`)). For instance, we can tell the test that we believe our variances are equal or not.
 
 
 ```{r}
@@ -726,7 +716,6 @@ Please test those alternative hypotheses and state whether you will accept or re
 # Solutions
 
 **To be revealed during the workshop!**
-
 
 **To be revealed during the workshop!**
 
