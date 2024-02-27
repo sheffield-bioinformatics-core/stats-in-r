@@ -1,3 +1,4 @@
+
 ---
 title: "Statistical Analysis of Biological Data"
 author: "Mark Dunning, Niamh Errington and Aya Elwazir"
@@ -22,7 +23,7 @@ In this course we will explain the theory behind common statistical tests to com
 To install the entire collection of tidyverse packages (which includes other useful data-related packages that we will not use today), you may wish to use the following:-
 
 ```{r eval=FALSE}
-## Make take some time!
+## May take some time!
 install.packages("tidyverse")
 ```
 
@@ -371,6 +372,7 @@ $BMI = weight  / height^2$
 ```{r echo=FALSE}
 diet <- diet %>% 
   mutate(BMI =initial.weight / (height/100)^2)
+
 ```
 
 We can now test our new variable for normality using the plots and tests from earlier, although we will not show all the plots here.
@@ -424,68 +426,63 @@ The dataset in it's current form is not suitable for analysis with tidy methods.
 - One column containing numeric variables (each value of weight)
 - An indicator (or categorical) variable to denote the group each numeric observation belongs to (initial or final weight)
 
-The `pivot_longer` function supports this transformation. As we want to use all columns in our existing dataset we have to use the `everything()` shortcut to select the columns. The names of our new columns can be chosen, but we will chose `Y` and `X` to be consistent with the formula notation introduced earlier.
+The `pivot_longer` function supports this transformation. As we want to use all columns in our existing dataset we have to use the `everything()` shortcut to select the columns. 
 
 ```{r}
-diet %>% 
+diet_long <- diet %>% 
   select(contains("weight")) %>% 
-  tidyr::pivot_longer(everything(),values_to = "Y",names_to = "X") 
+  tidyr::pivot_longer(everything(),names_to = "time_point", values_to = "weight") 
+
+diet_long
 ```
 
-So now `Y` contains all our observations of weight and `X` indicates when the weights were measured. The `gghistogram` function we introduced earlier is able to visualise data in this form, and we can use the `facet.by` argument to produce separate plots for each type of weight measurement.
+So now `weight` contains all our observations of weight and `time_point` indicates when the weights were measured. The `gghistogram` function we introduced earlier is able to visualise data in this form, and we can use the `facet.by` argument to produce separate plots for each type of weight measurement.
 
 ```{r}
-diet %>% 
-  select(contains("weight")) %>% 
-  tidyr::pivot_longer(everything(),values_to = "Y",names_to = "X") %>% 
-  gghistogram(x = "Y", facet.by = "X",add_density = TRUE, y = "..density..") + stat_overlay_normal_density(col="red")
+diet_long %>% 
+  gghistogram(x = "weight", facet.by = "time_point",add_density = TRUE, y = "..density..") + stat_overlay_normal_density(col="red")
 ```
 
 We can run the shapiro test on the two variables:- 
 
 ```{r}
-diet %>% 
-  select(contains("weight")) %>% 
-  tidyr::pivot_longer(everything(),values_to = "Y",names_to = "X") %>%
-  group_by(X) %>% 
-  shapiro_test(Y)
+diet_long %>%
+  group_by(time_point) %>% 
+  shapiro_test(weight)
 ```
-The `t_test` function requires us to create a *formula* as before. This time we are doing a two-sided test, so the formula is `Y ~ X`.
+The `t_test` function requires us to create a *formula* as before. This time we are doing a two-sided test, so the formula is `Y ~ X` where 'Y' is the numeric variable and 'X' is the categorical/groups variable.
 
 ```{r}
-diet %>% 
-  select(contains("weight")) %>% 
-  tidyr::pivot_longer(everything(),values_to = "Y",names_to = "X") %>%
-  t_test(Y ~ X)
+diet_long %>%
+  t_test(weight ~ time_point)
 ```
 
 The p-value is significant and shows that overall the weights of individuals is *different* before and after diet. However, this test is not specifically testing for a *decrease* after the diet (which we would really hope to be the case). By adding an extra argument `alternative=less` we get a different result
 
 ```{r}
-diet %>% 
-  select(contains("weight")) %>% 
-  tidyr::pivot_longer(everything(),values_to = "Y",names_to = "X") %>%   t_test(Y ~ X,alternative = "less")
+diet_long %>%
+  t_test(weight ~ time_point, alternative = "less")
 ```
-
-An intuitive way of comparing the distributions and showing the test result on the plot is using a boxplot. For this we will revert to `ggplot2`, but we are include a p-value using the `stat_compare_means` function (from `ggpubr`.
-
-
-```{r}
-diet %>% 
-  select(contains("weight")) %>% 
-  tidyr::pivot_longer(everything(),values_to = "Y",names_to = "X") %>%
-  ggplot(aes(x = X, y = Y)) + geom_boxplot() + geom_jitter(width=0.1) + stat_compare_means(method = "t.test",method.args = list(alternative = "less"))
-```
-
-
 There is also extra information that we could employ; namely that the measurements of weight are made **on the same person** before and after dieting. This is a classic example of when to apply a paired t-test. Again, we do not need to use a different function to perform the test; only add an argument `paired=TRUE` to `t_test`.
 
 ```{r}
-diet %>% 
-  select(contains("weight")) %>% 
-  tidyr::pivot_longer(everything(),values_to = "Y",names_to = "X") %>%
-  t_test(Y ~ X,alternative = "less",paired=TRUE)
+diet_long %>%
+  t_test(weight ~ time_point, alternative = "less",paired=TRUE)
 ```
+
+An intuitive way of comparing the distributions and showing the test result on the plot is using a boxplot. For this we will revert to `ggplot2`, but we are to include a p-value using the `stat_compare_means` function (from `ggpubr`.
+
+
+```{r}
+diet_long %>% 
+  ggplot(aes(x = time_point, y = weight)) + geom_boxplot() + geom_jitter(width=0.1) + 
+  stat_compare_means(method = "t.test",paired=TRUE, method.args = list(alternative = "less"))
+
+?stat_compare_means
+```
+
+
+
 
 A convenient plot in `ggpubr` will allow us to visualise the paired differences
 
@@ -496,39 +493,55 @@ ggpaired(diet, cond1="initial.weight", cond2="final.weight",line.color = "grey")
 
 ## The Independent t test, with two independent groups 
 
-Lets consider that we want to compare whether males or females lost more weight during the trial. Here we have two groups and these can be treated as *independant* variables as different patients belong to the two groups.
+Lets consider that we want to compare whether males or females lost more weight during the trial. So, let's create a *new variable called weight loss*
 
-The *null hypothesis* for such a test would be that the weight loss is the same between groups male and female. We seek to evidence to reject this hypothesis by calculating a test statistic. Firstly, we have to check for normality:-
+```{r}
+diet <- diet %>% 
+mutate(wt.loss = initial.weight - final.weight)
+
+```
+
+
+Here we have two groups (males and females), and these can be treated as *independent* variables as each group has different participants than the other group. 
+
+The *null hypothesis* for such a test would be that the weight loss is the same between groups male and female. We seek to evidence to reject this hypothesis by calculating a test statistic. 
+
+Remember, the t-test assumes normal distribution and equal variance
+
+Firstly, we have to check for normality:-
 
 ```{r}
 diet %>% 
-mutate(weight.loss = initial.weight - final.weight) %>% 
-ggdensity("weight.loss",color = "gender") + stat_overlay_normal_density()
+ggdensity("wt.loss",color = "gender") + stat_overlay_normal_density()
+
 diet %>%  
-  mutate(weight.loss = initial.weight - final.weight) %>% 
   group_by(gender) %>% 
-  shapiro_test(weight.loss)
+  shapiro_test(wt.loss)
 ```
-and if the variances are roughly the same
+Then we check for equal variances using the Levene test
+
 
 ```{r}
-diet %>%  
-  group_by(gender) %>% 
-  mutate(weight.loss = initial.weight - final.weight) %>% 
-  get_summary_stats(weight.loss,type="common")
+
+diet %>%
+  levene_test(wt.loss~ gender)
+
+#if p value is significant --> difference in variance (unequal variance) -->  use Welch t-test (R default) 
+#if p value is not significant --> no difference in variance (equal variance) --> use t-test (add argument var.equal =TRUE)
+
 ```
 
 We conclude that the variances are approximately the same and both variables are normally-distributed
 
-We can use the `t_test` function to perform an *independant* test. As before, the `formula` argument to `t_test` is the *R formula* notation for the test being performed. However, this time we *do not need the `pivot_longer` function* as we already the `gender` and `weight.loss` variables in our data frame
+We can use the `t_test` function to perform an *independent* test. As before, the `formula` argument to `t_test` is the *R formula* notation for the test being performed. However, this time we *do not need the `pivot_longer` function* as we already the `gender` and `weight.loss` variables in our data frame
 
 The `t_test` function allows various type of test to be performed by changing the appropriate arguments (see the help for `t_test` for details (`?t_test`)). For instance, we can tell the test that we believe our variances are equal or not.
 
 
 ```{r}
 diet %>% 
-  mutate(weight.loss = initial.weight - final.weight) %>% 
-  t_test(weight.loss ~ gender,var.equal = TRUE)
+  t_test(wt.loss ~ gender,var.equal = TRUE) 
+
 ```
 We can see that the t-statistic we observe is consistent with the null hypothesis, that the weight loss in males and females is the same. That is, the probability of observing a t-statistic of 0.2 or more, or -0.2 or less, is quite high.
 
@@ -536,8 +549,7 @@ We can see that the t-statistic we observe is consistent with the null hypothesi
 
 ```{r}
 diet %>% 
-  mutate(weight.loss = initial.weight - final.weight) %>% 
-  ggplot(aes(x = gender, y=weight.loss)) + geom_boxplot() + stat_compare_means(method="t.test")
+  ggplot(aes(x = gender, y=wt.loss)) + geom_boxplot() + stat_compare_means(method="t.test")
 ```
 
 ## Non- Parametric alternatives (e.g. the Wilcoxon test)
@@ -548,31 +560,20 @@ Being able to use the `t_test` relies on the your data being normally-distribute
 
 This test has many different names including the Wilcoxon, Wilcoxon two sample test, Wilcoxon-Mann-Whitney, Wilcoxon rank sum and the Mann-Whitney-U test. However, this test should not be confused with the Wilcoxon signed rank test (which is used for paired tests). To avoid confusion this test is usually referred to as the Mann-Whitney U test, which is used when the dependent variable to be examined is continuous but the assumptions for parametric tests are violated.
 
-The assumptions of the Mann-Whitney U are as follows:
-
-1.The dependent variable is ordinal or continuous.
-
-2.The data consist of a randomly selected sample of independent observations from two independent groups.
-
-3.The dependent variables for the two independent groups share a similar shape.
-
 Fortunately, the `rstatix` developers have made the function to do a Wilcox-test similar to doing a t_test. **The difficulty is in choosing the correct test to apply - which R will not advise you on**.
 
 Let's go back to our example of comparing weight loss between groups male and female. The equivalent non-parametric version of the test we performed before is:-
 
 ```{r}
 diet %>% 
-  mutate(weight.loss = initial.weight - final.weight) %>% 
-  wilcox_test(weight.loss ~ gender)
+  wilcox_test(wt.loss ~ gender)
 ```
 
 The `wilcox_test` is flexible in much the same way that `t_test` is. We can switch to applying a paired test by adding the argument `paired=TRUE`.
 
 ```{r}
-diet %>% 
-  select(initial.weight,final.weight) %>% 
-  tidyr::pivot_longer(everything(),values_to = "Y",names_to = "X") %>% 
-  wilcox_test(Y ~ X, paired=TRUE)
+diet_long %>% 
+  wilcox_test(weight ~ time_point, paired=TRUE)
 ```
 
 
@@ -585,27 +586,26 @@ The two-sample t-test is useful when we have just two groups of continuous data 
 In order to justify if an ANOVA test is appropriate we have to test for normality.
 
 ```{r}
-diet <- mutate(diet, weight.loss = initial.weight - final.weight)
-```
-
-```{r}
+#by histogram
 diet %>%   
-gghistogram(x = "weight.loss", facet.by = "diet.type", add_density = TRUE, y = "..density..") + stat_overlay_normal_density(col="red")
-```
+gghistogram(x = "wt.loss", facet.by = "diet.type", add_density = TRUE, y = "..density..") + stat_overlay_normal_density(col="red")
 
-
-```{r}
-group_by(diet, diet.type) %>% 
-  shapiro_test(weight.loss)
+#by Q-Q plot
 diet %>% 
-  ggqqplot(x = "weight.loss", facet.by = "diet.type")
+  ggqqplot(x = "wt.loss", facet.by = "diet.type")
+
+#by shapiro test
+group_by(diet, diet.type) %>% 
+  shapiro_test(wt.loss)
 ```
+
 
 A one-way ANOVA compares group means by partitioning the variation in the data into *between group variance* and *within group variance*. Like the other statistical tests we have encountered, the functions in R do the hard work of calculating the statistics. The `anova_test` function is a tidy version of the ANOVA test.
 
 ```{r}
 diet %>% 
-  anova_test(weight.loss ~ diet.type)
+  anova_test(wt.loss ~ diet.type)
+
 ```
 
 
@@ -613,26 +613,31 @@ When the test provides a significant result (like above) it tells us that there 
 
 ```{r}
 diet %>%  
-  tukey_hsd(weight.loss ~ diet.type)
+  tukey_hsd(wt.loss ~ diet.type)
 ```
 
 As we have seen previously, a standard method of presenting the differences between groups is to use the `stat_compare_means` function to automatically add p-values to a boxplot or violin plot
 
 ```{r}
-ggplot(diet, aes(x = diet.type, y = weight.loss)) + geom_violin() + geom_jitter(width=0.1) + stat_compare_means(method="anova")
+ggplot(diet, aes(x = diet.type, y = wt.loss)) + geom_violin() + geom_jitter(width=0.1) + stat_compare_means(method="anova")
 ```
+
 However, in the case of more than two groups it will only show a single p-value from the ANOVA rather than individual comparisons. We can explicitly list particular contrasts we are interested in.
 
 ```{r}
 my_comparisons <- list( c("A", "B"), c("A", "C"), c("B", "C") )
-ggplot(diet, aes(x = diet.type, y = weight.loss)) + geom_violin() + geom_jitter() +  stat_compare_means(method = "t.test",comparisons = my_comparisons)
+ggplot(diet, aes(x = diet.type, y = wt.loss)) + geom_violin() + geom_jitter(width=0.1) + 
+  stat_compare_means(method = "t.test",comparisons = my_comparisons)
 ```
 Alternatively, we can manually-compute the p-values and add these to the plot.
 
 ```{r}
 stat_res <- diet %>% 
-  tukey_hsd(weight.loss ~ diet.type)
-ggplot(diet, aes(x = diet.type, y = weight.loss)) + geom_violin() + stat_pvalue_manual(stat_res, label = "p.adj",y.position = c(11, 13, 15))
+  tukey_hsd(wt.loss ~ diet.type)
+
+
+ggplot(diet, aes(x = diet.type, y = wt.loss)) + geom_violin() + geom_jitter(width=0.1)+
+  stat_pvalue_manual(stat_res, label = "p.adj",y.position = c(11, 13, 15))
 ```
 
 
@@ -643,20 +648,20 @@ Data that do not meet the assumptions of ANOVA (e.g. normality) can be tested us
 
 ```{r}
 diet %>% 
-  kruskal_test(weight.loss ~ diet.type)
+  kruskal_test(wt.loss ~ diet.type)
 ```
 Like the one-way ANOVA this will only tell us that at least one group is different and not specifically which group(s). The post-hoc `dunn.test` is recommended which also performs multiple testing correction.
 
 ```{r}
 diet %>% 
-  dunn_test(weight.loss ~ diet.type, p.adjust.method = "bonferroni")
+  dunn_test(wt.loss ~ diet.type, p.adjust.method = "bonferroni")
 ```
 
 
 At this point we could be about to recommend diet C to those that wish to lose weight. However, are there any other factors in the data that we should be considering? With `ggplot2` we can quite easily visualise the effects of multiple factors on the data. Lets add both gender and diet type into the plot. It now appears that diet C is having an effect on males but not females.
 
 ```{r}
-ggplot(diet, aes(x = diet.type, y = weight.loss,fill=gender)) + geom_boxplot()
+ggplot(diet, aes(x = diet.type, y = wt.loss,fill=gender)) + geom_boxplot()
 ```
 
 ## Two-way ANOVA
@@ -665,7 +670,7 @@ The *formula* notation allows us to specify an *interaction* between gender and 
 
 ```{r}
 diet %>% 
-  anova_test(weight.loss ~ diet.type*gender)
+  anova_test(wt.loss ~ diet.type*gender)
 ```
 
 
@@ -673,32 +678,9 @@ This tells us that an effect exists between diet type and gender, but like befor
 
 ```{r}
 diet %>% 
-  tukey_hsd(weight.loss ~ diet.type*gender)
+  tukey_hsd(wt.loss ~ diet.type*gender)
 ```
 
-## Repeated Measures
-
-
-We will read a modified version of the diet dataset in order to test a "repeated measures" analysis. Here we have added a midpoint weight measurement.
-
-```{r}
-diet2 <- read_csv("data/diet2.csv")
-View(diet2)
-```
-
-However, the three measures that we want to compare are given as columns in the data frame. We cannot express this using the R `~` notation. In other words the data is in *wide* format and not *long*. We can change this using the `tidyr` package. This creates a variable for the type of measurement (`initial`, `mid` or `final)` and a variable containing the corresponding value. 
-
-```{r}
-diet2 <- diet2 %>% select(id,gender, contains("weight")) %>% 
-  pivot_longer(3:5, values_to = "value", names_to = "time_point") %>% 
-  mutate(id = as.factor(id))
-```
-
-```{r}
-anova_test(diet2, dv =value, 
-           wid = id, 
-           within = time_point)
-```
 
 <div class="exercise">
 **Exercise**
@@ -715,7 +697,6 @@ Please test those alternative hypotheses and state whether you will accept or re
 
 # Solutions
 
-**To be revealed during the workshop!**
 
 **To be revealed during the workshop!**
 
@@ -851,7 +832,7 @@ ggplot(RCC2, aes(x = Grade, y = E2F3)) + geom_violin() + geom_jitter(width=0.1) 
 mir499_data <- 
   RCC2 %>%
   select(contains("mir499")) %>% 
-  pivot_longer(everything())
+  tidyr::pivot_longer(everything())
 gghistogram(mir499_data, x = "value", facet.by = "name")
 
 mir499_data %>% 
