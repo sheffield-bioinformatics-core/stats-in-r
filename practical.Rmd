@@ -18,7 +18,7 @@ knitr::opts_chunk$set(echo = TRUE,message=FALSE)
 
 # Link to test summary slide
 
-- [Summary slide for part 3 stat](Summary slide for part 3 stat.pptx)
+- [Summary slide for part 3 stat](Summary_slide.pptx)
 
 # Background
 
