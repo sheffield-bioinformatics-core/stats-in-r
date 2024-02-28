@@ -373,7 +373,7 @@ $BMI = weight  / height^2$
     + you might want to do this in multiple steps using the `%>%` notation
 </div>
 
-```{r echo=FALSE}
+```{r}
 diet <- diet %>% 
   mutate(BMI =initial.weight / (height/100)^2)
 
