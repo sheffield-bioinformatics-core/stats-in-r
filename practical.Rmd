@@ -682,7 +682,8 @@ This tells us that an effect exists between diet type and gender, but like befor
 
 ```{r}
 diet %>% 
-  tukey_hsd(wt.loss ~ diet.type*gender)
+  tukey_hsd(wt.loss ~ diet.type*gender) %>% 
+  filter(p.adj.signif != "ns")
 ```
 
 
@@ -706,7 +707,7 @@ Please test those alternative hypotheses and state whether you will accept or re
 
 ## Exercise 1
 
-```{r echo=FALSE, include=FALSE}
+```{r}
 ## NEW
 
 tab <- readxl::read_xlsx("data/EX Biostat P1.xlsx") %>% make_clean_names()
@@ -730,9 +731,7 @@ count(tab, Gender, Tumor.grade) %>%
 ## Exercise 2
 
 
-```{r echo=FALSE, include=FALSE}
-###NEW
-
+```{r}
 ##1-Read the excel file called 'EX Biostat P2' into R 
 Biostat2 <- readxl::read_xlsx("data/EX Biostat P2.xlsx")
 
@@ -791,7 +790,7 @@ ggplot(RCC2, aes(x = gender, y = E2F3)) + geom_violin() + geom_jitter(width = 0.
 
 ### 3.2
 
-```{r echo=FALSE, include=FALSE}
+```{r}
 gghistogram(RCC2, x = "ANXA", facet.by = "Side")
 
 RCC2 %>% 
@@ -810,7 +809,7 @@ ggplot(RCC2, aes(x = Side, y = ANXA)) + geom_violin() + geom_jitter() + stat_com
 ### 3.3
 
 
-```{r echo=FALSE, include=FALSE}
+```{r}
 gghistogram(RCC2, x = "E2F3", facet.by = "Grade", y = "..density..") + stat_overlay_normal_density() 
 
 #3 groups normal
@@ -832,7 +831,7 @@ ggplot(RCC2, aes(x = Grade, y = E2F3)) + geom_violin() + geom_jitter(width=0.1) 
 ### 3.4
 
 
-```{r echo=FALSE, include=FALSE}
+```{r}
 mir499_data <- 
   RCC2 %>%
   select(contains("mir499")) %>% 
@@ -855,7 +854,7 @@ mir499_data %>%
 ```
 ### 3.5
 
-```{r echo=FALSE, include=FALSE}
+```{r}
 gghistogram(RCC2, x = "DFFA", facet.by = "Grade")
 #not normal
 #non-parametric * > 2 groups --> kruskal Wallis
