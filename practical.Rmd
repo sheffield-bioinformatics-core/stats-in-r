@@ -16,6 +16,10 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE,message=FALSE)
 ```
 
+# Link to test summary slide
+
+- [Summary slide for part 3 stat](Summary slide for part 3 stat.pptx)
+
 # Background
 
 In this course we will explain the theory behind common statistical tests to compare two or more groups. We will illustrate this using biologically-motivated examples and R code that uses the "tidyverse" techniques of data manipulation and visualization.
