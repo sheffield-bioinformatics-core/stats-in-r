@@ -709,20 +709,20 @@ Please test those alternative hypotheses and state whether you will accept or re
 ```{r echo=FALSE, include=FALSE}
 ## NEW
 
-Biostat1 <- readxl::read_xlsx("data/EX Biostat P1.xlsx")
+tab <- readxl::read_xlsx("data/EX Biostat P1.xlsx") %>% make_clean_names()
 ##2-Make a cross table showing the gender in the rows and tumor grade in the columns
 
-count(Biostat1, Gender, `Tumor grade`)
+count(tab, Gender, Tumor.grade)
 
 
 ##3-Define the percentage of Grade III tumors within females 
-freq_table(Biostat1, Gender, `Tumor grade`)
+freq_table(tab, Gender, Tumor.grade)
 
 ##4-Use the appropriate test to check if the tumor grade depends on the gender 
 
-count(Biostat1, Gender, `Tumor grade`) %>% 
-    tidyr::pivot_wider(everything(), names_from = "Gender",values_from = "n") %>% 
-  select(-`Tumor grade`) %>% 
+count(tab, Gender, Tumor.grade) %>% 
+    tidyr::pivot_wider(names_from = Gender,values_from = n) %>% 
+  select(-Tumor.grade) %>% 
   chisq_test()
 
 ```
