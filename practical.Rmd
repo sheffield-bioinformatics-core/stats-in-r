@@ -764,7 +764,7 @@ get_summary_stats(Biostat2)
 
 ### 3.1
 
-```{r echo=FALSE, include=FALSE}
+```{r}
 RCC2 <- readxl::read_xlsx("data/RCC2.xlsx")
 
 gghistogram(RCC2, x = "E2F3", 
